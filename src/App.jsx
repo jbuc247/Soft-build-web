@@ -2581,11 +2581,9 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+        <div className="grid grid-cols-2 gap-3 mt-4">
           <button onClick={() => setView('sales')} className="flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><FileText className="w-4 h-4" /> View Sales</button>
           <button onClick={() => setView('stock')} className="flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><ClipboardList className="w-4 h-4" /> View Stock</button>
-          <button onClick={generateProductPdf} className="flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><FileText className="w-4 h-4" /> Print Stock</button>
-          <button onClick={generateBlankProductPdf} className="flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><Download className="w-4 h-4" /> Stock Fill</button>
         </div>
         <div className="mt-4 flex justify-center w-full">
           <button onClick={generateCompactProductPdf} className="flex justify-center items-center gap-2 bg-[#1abc9c] hover:bg-[#16a085] text-white px-8 py-3 rounded-xl shadow-md font-bold text-sm transition-all hover:shadow-lg w-full">
