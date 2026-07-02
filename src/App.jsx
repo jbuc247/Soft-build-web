@@ -2434,6 +2434,33 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
         toast.success("PDF Generated Successfully!");
       };
 
+      const generateCompactProductPdf = () => {
+        const doc = new jsPDF();
+        
+        if (products.length === 0) {
+          toast.error("No products to generate PDF.");
+          return;
+        }
+
+        autoTable(doc, {
+          startY: 10,
+          head: [['Name', 'Category', 'Barcode', 'Expiry', 'Price', 'Cost']],
+          body: products.map(p => [p.name || '', p.category || '-', p.barcode || '-', p.expiryDate || p.expiry || '-', '', '']),
+          theme: 'grid',
+          styles: { fontSize: 9, cellPadding: 2, minCellHeight: 8 },
+          headStyles: { fillColor: [26, 188, 156], textColor: [255, 255, 255] },
+          columnStyles: {
+            3: { cellWidth: 22 },
+            4: { cellWidth: 15 },
+            5: { cellWidth: 15 },
+          },
+          margin: { top: 10, bottom: 10, left: 10, right: 10 }
+        });
+        
+        doc.save(`Compact_Stock_Filling_Sheet_${new Date().toISOString().split('T')[0]}.pdf`);
+        toast.success("Compact Stock Filling Sheet downloaded!");
+      };
+
       const generateBlankProductPdf = () => {
         const doc = new jsPDF();
         
@@ -2447,20 +2474,20 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
         doc.text(settings.name || 'Products Sheet', 14, 15);
         doc.setFontSize(10);
         doc.setTextColor(120);
-        doc.text(`Stock Filling Sheet — ${today}`, 14, 22);
+        doc.text(`Stock Filling Sheet - ${today}`, 14, 22);
         doc.setTextColor(0);
         
         autoTable(doc, {
           startY: 28,
-          head: [['Name', 'Category', 'Barcode', 'Stock (fill)', 'Cost (fill)', 'Price (fill)']],
-          body: products.map(p => [p.name || '', p.category || '-', p.barcode || '-', '', '', '']),
+          head: [['Name', 'Category', 'Barcode', 'Expiry', 'Price', 'Cost']],
+          body: products.map(p => [p.name || '', p.category || '-', p.barcode || '-', p.expiryDate || '-', '', '']),
           theme: 'grid',
           styles: { fontSize: 9, cellPadding: 3, minCellHeight: 12 },
           headStyles: { fillColor: [16, 185, 129] },
           columnStyles: {
-            3: { cellWidth: 28 },
-            4: { cellWidth: 28 },
-            5: { cellWidth: 28 },
+            3: { cellWidth: 25 },
+            4: { cellWidth: 20 },
+            5: { cellWidth: 20 },
           },
         });
         
@@ -2554,14 +2581,20 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="flex gap-4 flex-wrap">
-          <button onClick={() => setView('sales')} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl shadow-lg shadow-emerald-100 font-medium"><FileText className="w-5 h-5" /> View Sales History</button>
-          <button onClick={() => setView('stock')} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl shadow-lg shadow-blue-100 font-medium"><ClipboardList className="w-5 h-5" /> View Stock History</button>
-          <button onClick={generateProductPdf} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl shadow-lg shadow-purple-100 font-medium"><FileText className="w-5 h-5" /> Print Stock Sheet</button>
-          <button onClick={generateBlankProductPdf} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg shadow-indigo-100 font-medium"><Download className="w-5 h-5" /> Stock Filling Sheet</button>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+          <button onClick={() => setView('sales')} className="flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><FileText className="w-4 h-4" /> View Sales</button>
+          <button onClick={() => setView('stock')} className="flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><ClipboardList className="w-4 h-4" /> View Stock</button>
+          <button onClick={generateProductPdf} className="flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><FileText className="w-4 h-4" /> Print Stock</button>
+          <button onClick={generateBlankProductPdf} className="flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors"><Download className="w-4 h-4" /> Stock Fill</button>
         </div>
         {view === 'sales' && (<HistoryModal title="Sales History" searchVal={salesSearch} onSearchChange={setSalesSearch} dateRange={salesDateRange} onDateChange={setSalesDateRange} onClose={() => setView('none')} onClear={() => clear('sales')} canDelete={currentUser?.role === 'owner'}><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium sticky top-0"><tr><th className="p-3">Date</th><th className="p-3">Product</th><th className="p-3">Qty</th><th className="p-3">Method</th><th className="p-3">Cashier</th><th className="p-3 text-right">Discount</th><th className="p-3 text-right">Total</th>{currentUser?.role === 'owner' && <th className="p-3 text-right">Action</th>}</tr></thead><tbody className="divide-y divide-slate-100">{filteredSales.slice((salesCurrentPage - 1) * 50, salesCurrentPage * 50).map(s => <tr key={s.id} className="hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(s.date).toLocaleString()}</td><td className="p-3 font-medium text-slate-800">{s.name}</td><td className="p-3">{s.quantity}</td><td className="p-3 uppercase text-xs font-bold text-slate-500">{s.paymentMethod}</td><td className="p-3 text-slate-500">{s.cashierName}</td><td className="p-3 text-right font-medium text-red-500">{s.discount?.value > 0 ? (s.discount?.type === 'percent' ? `${s.discount.value}%` : `Ksh. ${parseFloat(s.discount.value).toLocaleString()}`) : '-'}</td><td className="p-3 text-right font-bold text-emerald-600">Ksh. {(s.finalPrice).toLocaleString()}</td>{currentUser?.role === 'owner' && (<td className="p-3 text-right"><button onClick={() => onCancelSale(s.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg disabled:text-slate-300 disabled:hover:bg-transparent" title="Cancel Sale" disabled={s.paymentMethod === 'debt'}><Trash2 className="w-4 h-4" /></button></td>)}</tr>)}</tbody></table><Pagination totalItems={filteredSales.length} itemsPerPage={50} currentPage={salesCurrentPage} setCurrentPage={setSalesCurrentPage} /></HistoryModal>)}
-        {view === 'stock' && (<HistoryModal title="Stock History" searchVal={stockSearch} onSearchChange={setStockSearch} dateRange={stockDateRange} onDateChange={setStockDateRange} onClose={() => setView('none')} onClear={() => clear('stock')}><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium sticky top-0"><tr><th className="p-3">Date</th><th className="p-3">Product</th><th className="p-3">Added by</th><th className="p-3 text-right">Qty Added</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredStock.slice((stockCurrentPage - 1) * 50, stockCurrentPage * 50).map((s, i) => <tr key={i} className="hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(s.date).toLocaleString()}</td><td className="p-3 font-medium text-slate-800">{s.name}</td><td className="p-3 text-slate-500">{s.cashierName}</td><td className="p-3 text-right font-bold text-blue-600">+{s.qty}</td></tr>)}</tbody></table><Pagination totalItems={filteredStock.length} itemsPerPage={50} currentPage={stockCurrentPage} setCurrentPage={setStockCurrentPage} /></HistoryModal>)}</div>);
+        {view === 'stock' && (<HistoryModal title="Stock History" searchVal={stockSearch} onSearchChange={setStockSearch} dateRange={stockDateRange} onDateChange={setStockDateRange} onClose={() => setView('none')} onClear={() => clear('stock')}><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium sticky top-0"><tr><th className="p-3">Date</th><th className="p-3">Product</th><th className="p-3">Added by</th><th className="p-3 text-right">Qty Added</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredStock.slice((stockCurrentPage - 1) * 50, stockCurrentPage * 50).map((s, i) => <tr key={i} className="hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(s.date).toLocaleString()}</td><td className="p-3 font-medium text-slate-800">{s.name}</td><td className="p-3 text-slate-500">{s.cashierName}</td><td className="p-3 text-right font-bold text-blue-600">+{s.qty}</td></tr>)}</tbody></table><Pagination totalItems={filteredStock.length} itemsPerPage={50} currentPage={stockCurrentPage} setCurrentPage={setStockCurrentPage} /></HistoryModal>)}
+        <div className="mt-8 pt-4 flex justify-center w-full">
+          <button onClick={generateCompactProductPdf} className="flex justify-center items-center gap-2 bg-[#1abc9c] hover:bg-[#16a085] text-white px-8 py-3 rounded-xl shadow-md font-bold text-sm transition-all hover:shadow-lg w-full sm:w-auto">
+            <Printer className="w-5 h-5" /> Print Compact Stock Filling PDF
+          </button>
+        </div>
+      </div>);
     };
 
     
