@@ -208,9 +208,12 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
           body: JSON.stringify({ url, token, key, value: JSON.stringify(data) }),
         });
         if (r.ok) {
-          // Stamp local write time so the polling loop doesn't re-download our own change
-          sessionStorage.setItem('sb_last_local_write', String(Date.now()));
-          return true;
+          const resJson = await r.json();
+          if (resJson.ok) {
+            // Stamp local write time so the polling loop doesn't re-download our own change
+            sessionStorage.setItem('sb_last_local_write', String(Date.now()));
+            return true;
+          }
         }
         return false;
       } catch (_) {
@@ -4471,12 +4474,15 @@ id,name,qty,barcode,date,cashierName
               return;
             }
 
+            // Step 2.5: check if we have pending local changes to push
+            if (localStorage.getItem('has_pending_sync') === 'true') {
+              await tursoSyncAll();
+              // After pushing, the remote will be newer, so we skip the pull logic for this cycle
+              return;
+            }
+
             // Step 3: if remote is newer than what we last saw, check if WE caused the change
             if (last_modified > lastSyncTsRef.current) {
-              if (localStorage.getItem('has_pending_sync') === 'true') {
-                await tursoSyncAll();
-                return;
-              }
               // Grace period: if this device wrote within the last 3 seconds, skip (it's our own write)
               const lastLocalWrite = Number(sessionStorage.getItem('sb_last_local_write') || 0);
               const msSinceLocalWrite = Date.now() - lastLocalWrite;
