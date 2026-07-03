@@ -2376,7 +2376,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
     };
 
 
-    const SummaryPanel = ({ products, salesHistory, setSalesHistory, expenses, debts, settings, stockHistory, setStockHistory, currentUser, onCancelSale }) => {
+    const SummaryPanel = ({ products, setProducts, salesHistory, setSalesHistory, expenses, debts, settings, stockHistory, setStockHistory, currentUser, onCancelSale }) => {
       const [view, setView] = useState('none');
       const [showQRGenerator, setShowQRGenerator] = useState(false);
       const [salesSearch, setSalesSearch] = useState(''); const [stockSearch, setStockSearch] = useState('');
@@ -2594,7 +2594,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
             <QrCode className="w-5 h-5" /> Generate QR Codes
           </button>
         </div>
-        {showQRGenerator && <QRGeneratorModal products={products} onClose={() => setShowQRGenerator(false)} />}
+        {showQRGenerator && <QRGeneratorModal products={products} setProducts={setProducts} onClose={() => setShowQRGenerator(false)} />}
         {view === 'sales' && (<HistoryModal title="Sales History" searchVal={salesSearch} onSearchChange={setSalesSearch} dateRange={salesDateRange} onDateChange={setSalesDateRange} onClose={() => setView('none')} onClear={() => clear('sales')} canDelete={currentUser?.role === 'owner'}><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium sticky top-0"><tr><th className="p-3">Date</th><th className="p-3">Product</th><th className="p-3">Qty</th><th className="p-3">Method</th><th className="p-3">Cashier</th><th className="p-3 text-right">Discount</th><th className="p-3 text-right">Total</th>{currentUser?.role === 'owner' && <th className="p-3 text-right">Action</th>}</tr></thead><tbody className="divide-y divide-slate-100">{filteredSales.slice((salesCurrentPage - 1) * 50, salesCurrentPage * 50).map(s => <tr key={s.id} className="hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(s.date).toLocaleString()}</td><td className="p-3 font-medium text-slate-800">{s.name}</td><td className="p-3">{s.quantity}</td><td className="p-3 uppercase text-xs font-bold text-slate-500">{s.paymentMethod}</td><td className="p-3 text-slate-500">{s.cashierName}</td><td className="p-3 text-right font-medium text-red-500">{s.discount?.value > 0 ? (s.discount?.type === 'percent' ? `${s.discount.value}%` : `Ksh. ${parseFloat(s.discount.value).toLocaleString()}`) : '-'}</td><td className="p-3 text-right font-bold text-emerald-600">Ksh. {(s.finalPrice).toLocaleString()}</td>{currentUser?.role === 'owner' && (<td className="p-3 text-right"><button onClick={() => onCancelSale(s.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg disabled:text-slate-300 disabled:hover:bg-transparent" title="Cancel Sale" disabled={s.paymentMethod === 'debt'}><Trash2 className="w-4 h-4" /></button></td>)}</tr>)}</tbody></table><Pagination totalItems={filteredSales.length} itemsPerPage={50} currentPage={salesCurrentPage} setCurrentPage={setSalesCurrentPage} /></HistoryModal>)}
         {view === 'stock' && (<HistoryModal title="Stock History" searchVal={stockSearch} onSearchChange={setStockSearch} dateRange={stockDateRange} onDateChange={setStockDateRange} onClose={() => setView('none')} onClear={() => clear('stock')}><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium sticky top-0"><tr><th className="p-3">Date</th><th className="p-3">Product</th><th className="p-3">Added by</th><th className="p-3 text-right">Qty Added</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredStock.slice((stockCurrentPage - 1) * 50, stockCurrentPage * 50).map((s, i) => <tr key={i} className="hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(s.date).toLocaleString()}</td><td className="p-3 font-medium text-slate-800">{s.name}</td><td className="p-3 text-slate-500">{s.cashierName}</td><td className="p-3 text-right font-bold text-blue-600">+{s.qty}</td></tr>)}</tbody></table><Pagination totalItems={filteredStock.length} itemsPerPage={50} currentPage={stockCurrentPage} setCurrentPage={setStockCurrentPage} /></HistoryModal>)}
       </div>);
@@ -4865,7 +4865,7 @@ id,name,qty,barcode,date,cashierName
       </div>);
     };
 
-    const QRGeneratorModal = ({ products, onClose }) => {
+    const QRGeneratorModal = ({ products, setProducts, onClose }) => {
       const [searchTerm, setSearchTerm] = useState('');
       const [selectedIds, setSelectedIds] = useState([]);
       const [copies, setCopies] = useState({});
@@ -4881,8 +4881,9 @@ id,name,qty,barcode,date,cashierName
           if (isSelected) {
             return prev.filter(i => i !== id);
           } else {
+            const prod = products.find(p => p.id === id);
             setCopies(c => ({...c, [id]: c[id] || 1}));
-            setColors(c => ({...c, [id]: c[id] || '#000000'}));
+            setColors(c => ({...c, [id]: c[id] || prod?.qrColor || '#000000'}));
             return [...prev, id];
           }
         });
@@ -4895,6 +4896,20 @@ id,name,qty,barcode,date,cashierName
         }
         setIsGenerating(true);
         try {
+          // Save colors to products
+          let productsUpdated = false;
+          const updatedProducts = products.map(p => {
+            if (selectedIds.includes(p.id) && colors[p.id] && p.qrColor !== colors[p.id]) {
+              productsUpdated = true;
+              return { ...p, qrColor: colors[p.id] };
+            }
+            return p;
+          });
+          
+          if (productsUpdated && setProducts) {
+            await setProducts(updatedProducts);
+          }
+
           const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
@@ -4902,7 +4917,7 @@ id,name,qty,barcode,date,cashierName
           });
 
           const margin = 2;
-          const spacing = 0.3;
+          const spacing = 5;
           const dividerThickness = 0.4;
           const sizeMm = qrSize * 10;
           
@@ -4912,8 +4927,7 @@ id,name,qty,barcode,date,cashierName
           let x = margin;
           let y = margin;
           
-          const textHeight = 4;
-          const itemHeight = sizeMm + textHeight;
+          const itemHeight = sizeMm;
           const itemWidth = sizeMm;
           
           let isFirstProduct = true;
@@ -4943,7 +4957,7 @@ id,name,qty,barcode,date,cashierName
             }
             isFirstProduct = false;
 
-            const qrDataUrl = await QRCode.toDataURL(prod.id.toString(), {
+            const qrDataUrl = await QRCode.toDataURL(prod.name || prod.id.toString(), {
               color: {
                 dark: color,
                 light: '#ffffff'
@@ -4964,12 +4978,6 @@ id,name,qty,barcode,date,cashierName
               }
 
               doc.addImage(qrDataUrl, 'PNG', x, y, itemWidth, sizeMm);
-              
-              doc.setFontSize(8);
-              doc.setTextColor(0, 0, 0);
-              const shortName = prod.name.substring(0, 20);
-              doc.text(shortName, x, y + sizeMm + 3, { maxWidth: itemWidth });
-
               x += itemWidth + spacing;
             }
           }
