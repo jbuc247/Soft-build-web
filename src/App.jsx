@@ -226,18 +226,16 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
     const tursoSyncAll = async () => {
       try {
         const keys = ['products', 'salesHistory', 'customers', 'debts', 'paidDebts', 'expenses', 'stockHistory', 'settings', 'superAdminSettings'];
-        const syncPromises = keys.map(async (k) => {
+        let successCount = 0;
+        for (const k of keys) {
           let val = await loadDataFromDB(k);
           if (val === undefined || val === null) {
             // Default empty state for collections if they haven't been created yet
             val = (k === 'settings' || k === 'superAdminSettings') ? {} : [];
           }
-          return tursoSync(k, val);
-        });
-        
-        const results = await Promise.all(syncPromises);
-        const successCount = results.filter(Boolean).length;
-        
+          const ok = await tursoSync(k, val);
+          if (ok) successCount++;
+        }
         if (successCount === keys.length) {
           localStorage.removeItem('has_pending_sync');
         }
@@ -4472,7 +4470,14 @@ id,name,qty,barcode,date,cashierName
           if (isPollingRef.current) return;
           isPollingRef.current = true;
           try {
-            // Step 1: cheap poll — just get the timestamp
+            // Step 1: If we have pending offline/local changes, pushing them is our absolute highest priority.
+            if (localStorage.getItem('has_pending_sync') === 'true') {
+              await tursoSyncAll();
+              // Skip the rest of the poll. The next poll tick will fetch the fresh timestamp we just created.
+              return;
+            }
+
+            // Step 2: Cheap poll — just get the remote timestamp
             const pollRes = await fetch('/api/poll', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -4480,22 +4485,17 @@ id,name,qty,barcode,date,cashierName
             });
             if (!pollRes.ok) return;
             const { last_modified } = await pollRes.json();
+            
+            // If the remote DB has no timestamp (it's completely empty), we have nothing to pull.
             if (!last_modified) return;
 
-            // Step 2: skip if we have never synced yet (first poll, set baseline)
+            // Step 3: Skip if we have never synced yet (first poll, set baseline)
             if (lastSyncTsRef.current === 0) {
               lastSyncTsRef.current = last_modified;
               return;
             }
 
-            // Step 2.5: check if we have pending local changes to push
-            if (localStorage.getItem('has_pending_sync') === 'true') {
-              await tursoSyncAll();
-              // After pushing, the remote will be newer, so we skip the pull logic for this cycle
-              return;
-            }
-
-            // Step 3: if remote is newer than what we last saw, check if WE caused the change
+            // Step 4: If remote is newer than what we last saw, check if WE caused the change
             if (last_modified > lastSyncTsRef.current) {
               // Grace period: if this device wrote within the last 3 seconds, skip (it's our own write)
               const lastLocalWrite = Number(sessionStorage.getItem('sb_last_local_write') || 0);
