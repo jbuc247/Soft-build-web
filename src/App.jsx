@@ -4442,7 +4442,7 @@ id,name,qty,barcode,date,cashierName
       useEffect(() => { const loadAllData = async () => { const loadedProducts = (await loadDataFromDB('products') || []).filter(Boolean); const loadedCustomers = (await loadDataFromDB('customers') || []).filter(Boolean); const loadedDebts = (await loadDataFromDB('debts') || []).filter(Boolean); const loadedPaidDebts = (await loadDataFromDB('paidDebts') || []).filter(Boolean); const loadedExpenses = (await loadDataFromDB('expenses') || []).filter(Boolean); const loadedSales = (await loadDataFromDB('salesHistory') || []).filter(Boolean); const loadedStock = (await loadDataFromDB('stockHistory') || []).filter(Boolean); const loadedSnaps = (await loadMonthlySnapshots() || []).filter(Boolean); setProducts(loadedProducts); setCustomers(loadedCustomers); setDebts(loadedDebts); setPaidDebts(loadedPaidDebts); setExpenses(loadedExpenses); setSalesHistory(loadedSales); setStockHistory(loadedStock); setMonthlySnapshots(loadedSnaps); }; loadAllData(); }, []);
 
       // ── Real-time sync: poll Turso every 5s for changes made on other devices ──
-      const lastSyncTsRef = useRef(0);
+      // ── Real-time sync: poll Turso every 5s for changes made on other devices ──
       const isPollingRef = useRef(false);
 
       useEffect(() => {
@@ -4489,19 +4489,18 @@ id,name,qty,barcode,date,cashierName
             // If the remote DB has no timestamp (it's completely empty), we have nothing to pull.
             if (!last_modified) return;
 
-            // Step 3: Skip if we have never synced yet (first poll, set baseline)
-            if (lastSyncTsRef.current === 0) {
-              lastSyncTsRef.current = last_modified;
-              return;
-            }
-
-            // Step 4: If remote is newer than what we last saw, check if WE caused the change
-            if (last_modified > lastSyncTsRef.current) {
-              // Grace period: if this device wrote within the last 3 seconds, skip (it's our own write)
+            // Step 3: Check if remote is newer than the last time we synced
+            const lastLocalSync = Number(localStorage.getItem('sb_last_sync_ts') || 0);
+            
+            if (last_modified > lastLocalSync) {
+              // Grace period: if this device pushed data within the last 10 seconds, it's our own write
               const lastLocalWrite = Number(sessionStorage.getItem('sb_last_local_write') || 0);
               const msSinceLocalWrite = Date.now() - lastLocalWrite;
-              lastSyncTsRef.current = last_modified;
-              if (msSinceLocalWrite < 3000) return; // Our own write — skip
+              
+              // Update our local sync baseline so we don't pull this same timestamp again
+              localStorage.setItem('sb_last_sync_ts', String(last_modified));
+
+              if (msSinceLocalWrite < 10000) return; // Our own write — skip pull
 
               // Pull fresh data and apply directly to React state
               const pullRes = await fetch('/api/pull', {
