@@ -4871,7 +4871,18 @@ id,name,qty,barcode,date,cashierName
       const [copies, setCopies] = useState({});
       const [colors, setColors] = useState({});
       const [qrSize, setQrSize] = useState(2);
+      const [qrSpacing, setQrSpacing] = useState(2);
       const [isGenerating, setIsGenerating] = useState(false);
+
+      const handleColorChange = (id, newColor) => {
+        const usedInDb = products.find(p => p.id !== id && p.qrColor === newColor);
+        const usedInState = Object.entries(colors).find(([prodId, c]) => prodId !== id && c === newColor);
+        if (usedInDb || usedInState) {
+          toast.error("This color is already used by another product.");
+          return;
+        }
+        setColors(prev => ({...prev, [id]: newColor}));
+      };
 
       const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -4917,7 +4928,7 @@ id,name,qty,barcode,date,cashierName
           });
 
           const margin = 2;
-          const spacing = 5;
+          const spacing = Number(qrSpacing) || 2;
           const dividerThickness = 0.4;
           const sizeMm = qrSize * 10;
           
@@ -5010,14 +5021,20 @@ id,name,qty,barcode,date,cashierName
                 <Search className="w-5 h-5 text-slate-400" />
                 <input type="text" placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none w-full text-sm" />
               </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-slate-700">Size:</label>
-                <select value={qrSize} onChange={e => setQrSize(Number(e.target.value))} className="border p-2 rounded-lg text-sm bg-slate-50 outline-none">
-                  <option value={1}>1 cm</option>
-                  <option value={2}>2 cm</option>
-                  <option value={3}>3 cm</option>
-                  <option value={4}>4 cm</option>
-                </select>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-slate-700">Spacing (mm):</label>
+                  <input type="number" step="0.5" min="0" max="20" value={qrSpacing} onChange={e => setQrSpacing(e.target.value)} className="border p-2 w-20 rounded-lg text-sm bg-slate-50 outline-none" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-slate-700">Size:</label>
+                  <select value={qrSize} onChange={e => setQrSize(Number(e.target.value))} className="border p-2 rounded-lg text-sm bg-slate-50 outline-none">
+                    <option value={1}>1 cm</option>
+                    <option value={2}>2 cm</option>
+                    <option value={3}>3 cm</option>
+                    <option value={4}>4 cm</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -5040,7 +5057,7 @@ id,name,qty,barcode,date,cashierName
                           </div>
                           <div className="flex flex-col">
                             <label className="text-xs font-medium text-slate-500 mb-1">Color</label>
-                            <input type="color" value={colors[prod.id] || '#000000'} onChange={e => setColors({...colors, [prod.id]: e.target.value})} className="w-10 h-8 p-0 border-0 rounded cursor-pointer" />
+                            <input type="color" value={colors[prod.id] || '#000000'} onChange={e => handleColorChange(prod.id, e.target.value)} className="w-10 h-8 p-0 border-0 rounded cursor-pointer" />
                           </div>
                         </div>
                       )}
