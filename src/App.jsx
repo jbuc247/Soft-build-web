@@ -4986,20 +4986,31 @@ id,name,qty,barcode,date,cashierName
             const itemWidth = sizeMm;
 
             if (!isFirstProduct) {
-              if (x !== margin) {
+              if (x + itemWidth > pageWidth - margin) {
+                // New product won't fit on current line, naturally wrap it
                 x = margin;
                 y += previousItemHeight + spacing;
+                
+                if (y + itemHeight > pageHeight - margin) {
+                  doc.addPage();
+                  x = margin;
+                  y = margin;
+                } else {
+                  // Draw horizontal divider since it's a new product starting on a new line
+                  doc.setDrawColor(255, 0, 0);
+                  doc.setLineWidth(dividerThickness);
+                  doc.line(margin, y - (spacing / 2), pageWidth - margin, y - (spacing / 2));
+                }
+              } else {
+                // New product fits on the current line. Draw vertical divider to separate them!
+                if (x !== margin) {
+                  doc.setDrawColor(255, 0, 0);
+                  doc.setLineWidth(dividerThickness);
+                  const lineX = x - (spacing / 2);
+                  const lineH = Math.max(previousItemHeight, itemHeight);
+                  doc.line(lineX, y, lineX, y + lineH);
+                }
               }
-              if (y + dividerThickness + spacing > pageHeight - margin) {
-                doc.addPage();
-                y = margin;
-                x = margin;
-              }
-              
-              doc.setDrawColor(255, 0, 0);
-              doc.setLineWidth(dividerThickness);
-              doc.line(margin, y + (spacing / 2), pageWidth - margin, y + (spacing / 2));
-              y += dividerThickness + spacing;
             }
             isFirstProduct = false;
 
