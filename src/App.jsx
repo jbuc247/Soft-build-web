@@ -226,16 +226,18 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
     const tursoSyncAll = async () => {
       try {
         const keys = ['products', 'salesHistory', 'customers', 'debts', 'paidDebts', 'expenses', 'stockHistory', 'settings', 'superAdminSettings'];
-        let successCount = 0;
-        for (const k of keys) {
+        const syncPromises = keys.map(async (k) => {
           let val = await loadDataFromDB(k);
           if (val === undefined || val === null) {
             // Default empty state for collections if they haven't been created yet
             val = (k === 'settings' || k === 'superAdminSettings') ? {} : [];
           }
-          const ok = await tursoSync(k, val);
-          if (ok) successCount++;
-        }
+          return tursoSync(k, val);
+        });
+        
+        const results = await Promise.all(syncPromises);
+        const successCount = results.filter(Boolean).length;
+        
         if (successCount === keys.length) {
           localStorage.removeItem('has_pending_sync');
         }
@@ -4435,6 +4437,8 @@ id,name,qty,barcode,date,cashierName
 
       // ── Real-time sync: poll Turso every 5s for changes made on other devices ──
       const lastSyncTsRef = useRef(0);
+      const isPollingRef = useRef(false);
+
       useEffect(() => {
         const raw = localStorage.getItem('db_session');
         if (!raw) return; // No DB connected — don't poll
@@ -4457,6 +4461,8 @@ id,name,qty,barcode,date,cashierName
         };
 
         const interval = setInterval(async () => {
+          if (isPollingRef.current) return;
+          isPollingRef.current = true;
           try {
             // Step 1: cheap poll — just get the timestamp
             const pollRes = await fetch('/api/poll', {
@@ -4502,6 +4508,7 @@ id,name,qty,barcode,date,cashierName
               }
             }
           } catch (_) { /* Silent — never crash the POS */ }
+          finally { isPollingRef.current = false; }
         }, 5000);
 
         return () => clearInterval(interval);
