@@ -271,7 +271,15 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
         });
         const result = await res.json();
         
-        if (result.ok && result.data && Object.keys(result.data).length > 0) {
+        let hasRealData = false;
+        if (result.ok && result.data) {
+          for (const val of Object.values(result.data)) {
+            if (Array.isArray(val) && val.length > 0) hasRealData = true;
+            else if (val && !Array.isArray(val) && Object.keys(val).length > 0) hasRealData = true;
+          }
+        }
+
+        if (hasRealData) {
           // Data found! Save it to local DB
           for (const [key, value] of Object.entries(result.data)) {
             const cleanedValue = Array.isArray(value) ? value.filter(Boolean) : value;
