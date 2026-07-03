@@ -4860,6 +4860,199 @@ id,name,qty,barcode,date,cashierName
       </div>);
     };
 
+    const QRGeneratorModal = ({ products, onClose }) => {
+      const [searchTerm, setSearchTerm] = useState('');
+      const [selectedIds, setSelectedIds] = useState([]);
+      const [copies, setCopies] = useState({});
+      const [colors, setColors] = useState({});
+      const [qrSize, setQrSize] = useState(2);
+      const [isGenerating, setIsGenerating] = useState(false);
+
+      const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const toggleSelect = (id) => {
+        setSelectedIds(prev => {
+          const isSelected = prev.includes(id);
+          if (isSelected) {
+            return prev.filter(i => i !== id);
+          } else {
+            setCopies(c => ({...c, [id]: c[id] || 1}));
+            setColors(c => ({...c, [id]: c[id] || '#000000'}));
+            return [...prev, id];
+          }
+        });
+      };
+
+      const handleGenerate = async () => {
+        if (selectedIds.length === 0) {
+          toast.error("Please select at least one product.");
+          return;
+        }
+        setIsGenerating(true);
+        try {
+          const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+          });
+
+          const margin = 2;
+          const spacing = 0.3;
+          const dividerThickness = 0.4;
+          const sizeMm = qrSize * 10;
+          
+          const pageWidth = 210;
+          const pageHeight = 297;
+          
+          let x = margin;
+          let y = margin;
+          
+          const textHeight = 4;
+          const itemHeight = sizeMm + textHeight;
+          const itemWidth = sizeMm;
+          
+          let isFirstProduct = true;
+
+          for (const id of selectedIds) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) continue;
+
+            const numCopies = parseInt(copies[id]) || 1;
+            const color = colors[id] || '#000000';
+
+            if (!isFirstProduct) {
+              if (x !== margin) {
+                x = margin;
+                y += itemHeight + spacing;
+              }
+              if (y + dividerThickness + spacing > pageHeight - margin) {
+                doc.addPage();
+                y = margin;
+                x = margin;
+              }
+              
+              doc.setDrawColor(255, 0, 0);
+              doc.setLineWidth(dividerThickness);
+              doc.line(margin, y + (spacing / 2), pageWidth - margin, y + (spacing / 2));
+              y += dividerThickness + spacing;
+            }
+            isFirstProduct = false;
+
+            const qrDataUrl = await QRCode.toDataURL(prod.id.toString(), {
+              color: {
+                dark: color,
+                light: '#ffffff'
+              },
+              margin: 0,
+              width: 512
+            });
+
+            for (let i = 0; i < numCopies; i++) {
+              if (x + itemWidth > pageWidth - margin) {
+                x = margin;
+                y += itemHeight + spacing;
+              }
+              if (y + itemHeight > pageHeight - margin) {
+                doc.addPage();
+                x = margin;
+                y = margin;
+              }
+
+              doc.addImage(qrDataUrl, 'PNG', x, y, itemWidth, sizeMm);
+              
+              doc.setFontSize(8);
+              doc.setTextColor(0, 0, 0);
+              const shortName = prod.name.substring(0, 20);
+              doc.text(shortName, x, y + sizeMm + 3, { maxWidth: itemWidth });
+
+              x += itemWidth + spacing;
+            }
+          }
+
+          doc.save('Product_QRCodes.pdf');
+          toast.success("QR Codes generated successfully!");
+          onClose();
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to generate QR codes.");
+        } finally {
+          setIsGenerating(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <QrCode className="w-6 h-6 text-indigo-600" /> Generate QR Codes
+              </h2>
+              <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 border-b bg-white flex flex-wrap gap-4 items-center justify-between">
+              <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-2 w-full md:w-auto flex-1">
+                <Search className="w-5 h-5 text-slate-400" />
+                <input type="text" placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none w-full text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-slate-700">Size:</label>
+                <select value={qrSize} onChange={e => setQrSize(Number(e.target.value))} className="border p-2 rounded-lg text-sm bg-slate-50 outline-none">
+                  <option value={1}>1 cm</option>
+                  <option value={2}>2 cm</option>
+                  <option value={3}>3 cm</option>
+                  <option value={4}>4 cm</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
+              <div className="space-y-3">
+                {filteredProducts.map(prod => {
+                  const isSelected = selectedIds.includes(prod.id);
+                  return (
+                    <div key={prod.id} className={`flex items-center gap-4 p-3 bg-white border rounded-xl transition-all ${isSelected ? 'border-indigo-500 shadow-sm' : 'border-slate-200'}`}>
+                      <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(prod.id)} className="w-5 h-5 accent-indigo-600" />
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-800">{prod.name}</p>
+                        <p className="text-xs text-slate-500">ID: {prod.id} | Stock: {prod.stock}</p>
+                      </div>
+                      {isSelected && (
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <div className="flex flex-col">
+                            <label className="text-xs font-medium text-slate-500 mb-1">Copies</label>
+                            <input type="number" min="1" value={copies[prod.id] || 1} onChange={e => setCopies({...copies, [prod.id]: Math.max(1, parseInt(e.target.value) || 1)})} className="w-20 p-1.5 border rounded-lg text-center outline-none" />
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-xs font-medium text-slate-500 mb-1">Color</label>
+                            <input type="color" value={colors[prod.id] || '#000000'} onChange={e => setColors({...colors, [prod.id]: e.target.value})} className="w-10 h-8 p-0 border-0 rounded cursor-pointer" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {filteredProducts.length === 0 && <p className="text-center text-slate-500 py-8">No products found.</p>}
+              </div>
+            </div>
+
+            <div className="p-4 border-t bg-white flex justify-between items-center">
+              <p className="text-sm font-medium text-slate-600">{selectedIds.length} products selected</p>
+              <div className="flex gap-3">
+                <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+                <button onClick={handleGenerate} disabled={isGenerating || selectedIds.length === 0} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2.5 rounded-xl shadow-md font-bold transition-all disabled:opacity-50">
+                  {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
+                  {isGenerating ? 'Generating...' : 'Generate PDF'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     const App = () => {
       // --- SESSION PERSISTENCE ---
       // Restore view and currentUser from localStorage so page refresh never drops the user
