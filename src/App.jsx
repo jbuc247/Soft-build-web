@@ -4986,6 +4986,11 @@ id,name,qty,barcode,date,cashierName
 export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
+  // Default values
+  const [defaultCopies, setDefaultCopies] = useState(1);
+  const [defaultWidth, setDefaultWidth] = useState(20);
+  const [defaultHeight, setDefaultHeight] = useState(10);
+  
   // By default, select all products that don't have a barcode
   const [selectedProductIds, setSelectedProductIds] = useState(() => {
     const ids = new Set();
@@ -5014,9 +5019,12 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
   const generateUniqueBarcode = (existingProducts) => {
     let newBarcode;
     let exists = true;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     while (exists) {
-      // Generate 10-digit random number
-      newBarcode = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+      newBarcode = '';
+      for (let i = 0; i < 8; i++) {
+        newBarcode += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
       exists = existingProducts.some(p => p.barcode === newBarcode);
     }
     return newBarcode;
@@ -5025,15 +5033,13 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
   const handleBulkGenerate = async () => {
     if (selectedProductIds.size === 0) return;
     
-    // We will build a new array of products
     let tempProducts = [...products];
     const newSelections = { ...printSelections };
     
     tempProducts = tempProducts.map(p => {
       if (selectedProductIds.has(p.id)) {
-        // Double check if it already has a barcode, though it shouldn't
         const newBarcode = p.barcode || generateUniqueBarcode(tempProducts);
-        newSelections[newBarcode] = { numCopies: 1, width: 20, height: 10, productId: p.id };
+        newSelections[newBarcode] = { numCopies: defaultCopies, width: defaultWidth, height: defaultHeight, productId: p.id };
         return { ...p, barcode: newBarcode };
       }
       return p;
@@ -5057,7 +5063,7 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     });
     if (setProducts) await setProducts(updated);
     if (newBarcode) {
-      setPrintSelections(prev => ({...prev, [newBarcode]: { numCopies: 1, width: 20, height: 10, productId }}));
+      setPrintSelections(prev => ({...prev, [newBarcode]: { numCopies: defaultCopies, width: defaultWidth, height: defaultHeight, productId }}));
     }
   };
 
@@ -5067,7 +5073,7 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
       if (next[barcode]) {
         delete next[barcode];
       } else {
-        next[barcode] = { numCopies: 1, width: 20, height: 10, productId };
+        next[barcode] = { numCopies: defaultCopies, width: defaultWidth, height: defaultHeight, productId };
       }
       return next;
     });
@@ -5090,8 +5096,8 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     try {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const margin = 5;
-      const spacingX = 2; // spacing between labels horizontally
-      const spacingY = 4; // spacing between labels vertically to account for text
+      const spacingX = 1; // reduced spacing
+      const spacingY = 2; // reduced spacing
       const pageWidth = 210;
       const pageHeight = 297;
       
@@ -5108,19 +5114,16 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
         const widthMm = settings.width || 20;
         const heightMm = settings.height || 10;
         
-        // Product name height estimation
         const textHeightMm = 3; 
         const totalItemHeightMm = heightMm + textHeightMm;
 
         for (let i = 0; i < numCopies; i++) {
-          // Check if we need to wrap to next line
           if (x + widthMm > pageWidth - margin) {
             x = margin;
             y += maxRowHeight + spacingY;
             maxRowHeight = 0;
           }
           
-          // Check if we need a new page
           if (y + totalItemHeightMm > pageHeight - margin) {
             doc.addPage();
             x = margin;
@@ -5128,7 +5131,6 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
             maxRowHeight = 0;
           }
 
-          // Generate barcode image using jsbarcode on a canvas
           const canvas = document.createElement('canvas');
           JsBarcode(canvas, barcode, {
             format: "CODE128",
@@ -5137,27 +5139,28 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
           });
           const barcodeDataUrl = canvas.toDataURL('image/png');
 
-          // Draw dotted border
           doc.setDrawColor(150, 150, 150);
           doc.setLineWidth(0.2);
           doc.setLineDashPattern([1, 1], 0);
           doc.rect(x, y, widthMm, totalItemHeightMm);
-          doc.setLineDashPattern([], 0); // reset
+          doc.setLineDashPattern([], 0);
 
-          // Add Barcode Image
           doc.addImage(barcodeDataUrl, 'PNG', x, y, widthMm, heightMm);
           
-          // Add Product Name beneath the barcode
           doc.setFontSize(6);
           doc.setTextColor(0, 0, 0);
-          // truncated name if too long
+          
           let displayName = prod.name;
-          if (displayName.length > 20) {
-            displayName = displayName.substring(0, 17) + '...';
+          while (doc.getTextWidth(displayName + '...') > widthMm - 1 && displayName.length > 0) {
+            displayName = displayName.slice(0, -1);
           }
+          if (displayName.length < prod.name.length) {
+            displayName += '...';
+          }
+          
           const textWidth = doc.getTextWidth(displayName);
           const textX = x + (widthMm / 2) - (textWidth / 2);
-          const textY = y + heightMm + 2; // 2mm below the barcode image
+          const textY = y + heightMm + 2;
           doc.text(displayName, textX, textY);
 
           x += widthMm + spacingX;
@@ -5190,18 +5193,37 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
           </button>
         </div>
 
-        <div className="p-4 border-b bg-white flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-2 w-full md:w-auto flex-1">
-            <Search className="w-5 h-5 text-slate-400" />
-            <input type="text" placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none w-full text-sm" />
+        <div className="p-4 border-b bg-white flex flex-col gap-4">
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-2 w-full md:w-auto flex-1">
+              <Search className="w-5 h-5 text-slate-400" />
+              <input type="text" placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none w-full text-sm" />
+            </div>
+            
+            <div className="flex items-center gap-4 flex-wrap">
+              {selectedProductIds.size > 0 && (
+                <button onClick={handleBulkGenerate} className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
+                  Bulk Generate for {selectedProductIds.size} Products
+                </button>
+              )}
+            </div>
           </div>
           
-          <div className="flex items-center gap-4 flex-wrap">
-            {selectedProductIds.size > 0 && (
-              <button onClick={handleBulkGenerate} className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
-                Bulk Generate for {selectedProductIds.size} Products
-              </button>
-            )}
+          <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200 flex-wrap">
+            <p className="text-sm font-semibold text-slate-700">Default Print Settings:</p>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-slate-600">Copies</label>
+              <input type="number" min="1" value={defaultCopies} onChange={e => setDefaultCopies(Math.max(1, parseInt(e.target.value) || 1))} className="w-16 p-1.5 border rounded text-sm outline-none" />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-slate-600">Width (mm)</label>
+              <input type="number" min="10" value={defaultWidth} onChange={e => setDefaultWidth(Math.max(10, parseInt(e.target.value) || 20))} className="w-16 p-1.5 border rounded text-sm outline-none" />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-slate-600">Height (mm)</label>
+              <input type="number" min="5" value={defaultHeight} onChange={e => setDefaultHeight(Math.max(5, parseInt(e.target.value) || 10))} className="w-16 p-1.5 border rounded text-sm outline-none" />
+            </div>
+            <p className="text-xs text-slate-400 italic ml-auto">Applied when selecting a barcode for printing</p>
           </div>
         </div>
 
@@ -5211,7 +5233,7 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
               const isMissingBarcode = !prod.barcode;
               const isProdSelected = selectedProductIds.has(prod.id);
               const isPrintSelected = !!printSelections[prod.barcode];
-              const printSettings = printSelections[prod.barcode] || { numCopies: 1, width: 20, height: 10 };
+              const printSettings = printSelections[prod.barcode] || { numCopies: defaultCopies, width: defaultWidth, height: defaultHeight };
               
               return (
                 <div key={prod.id} className={`flex flex-col bg-white border rounded-xl transition-all ${isProdSelected ? 'border-indigo-500 shadow-sm' : 'border-slate-200'}`}>
@@ -5274,6 +5296,7 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     </div>
   );
 };
+
 
 
 
