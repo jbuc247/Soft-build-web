@@ -1983,7 +1983,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            {(role === 'owner' || perms.editProducts) && showAddProduct && (<div className="card grid md:grid-cols-2 lg:grid-cols-4 gap-4"><div className="col-span-full font-semibold text-slate-700">Add New Product</div><div className="lg:col-span-2"><input id="field-25" name="field-25" className="input-field" placeholder="Product Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div><div><input id="field-26" name="field-26" className="input-field" type="number" placeholder={form.isCommodity ? `Price per ${form.unit}` : "Price"} value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} /></div>{settings.showCosts && <div><input id="field-27" name="field-27" className="input-field" type="number" placeholder={form.isCommodity ? `Cost per ${form.unit}` : "Cost"} value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} /></div>}<div><input id="field-28" name="field-28" className="input-field" type="number" placeholder={form.isCommodity ? `Stock (${form.unit})` : "Stock"} value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} /></div>{settings.trackExpiry !== false && <div><label className="text-xs text-slate-500 font-medium block mb-1">Expiry Date</label><input id="field-29" name="field-29" type="month" className="input-field" value={form.expiryDate} onChange={e => setForm({ ...form, expiryDate: e.target.value })} /></div>}<div><input id="field-30" name="field-30" className="input-field" list="category-list" placeholder="Category" value={form.cat} onChange={e => setForm({ ...form, cat: e.target.value })} /><datalist id="category-list">{cats.map(c => <option key={c} value={c} />)}</datalist></div><div className="col-span-full lg:col-span-2"><div className="relative flex-1 flex gap-2"><div className="relative flex-1"><input id="field-31" name="field-31" className="input-field pr-8" placeholder="Barcode (Optional)" value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} />{settings.showScan && <button onClick={() => setScannerMode('fill')} className="absolute right-2 top-2.5 text-slate-400 hover:text-emerald-600"><Scan className="w-4 h-4" /></button>}</div><button onClick={(e) => { e.preventDefault(); let newBarcode; let exists = true; const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; const numbers = "0123456789"; while (exists) { newBarcode = ""; for (let i = 0; i < 3; i++) newBarcode += letters.charAt(Math.floor(Math.random() * letters.length)); for (let i = 0; i < 5; i++) newBarcode += numbers.charAt(Math.floor(Math.random() * numbers.length)); exists = products.some(p => p.barcode === newBarcode); } setForm({...form, code: newBarcode}); }} className="bg-indigo-100 text-indigo-700 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-200 shrink-0">Generate</button></div></div><div className="col-span-full flex justify-between items-center mt-2"><div className="flex items-center gap-4"><div className="flex items-center gap-2"><input type="checkbox" id="isCommodityAdd" checked={form.isCommodity} onChange={e => setForm({ ...form, isCommodity: e.target.checked })} className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500" /><label htmlFor="isCommodityAdd" className="text-sm font-medium text-slate-700">Commodity</label></div>{form.isCommodity && (<select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} className="input-field py-1 text-sm w-24"><option value="Kg">Kg</option><option value="L">L</option></select>)}</div><button onClick={addProd} className="btn-primary px-6"><Plus className="w-4 h-4" /> Add</button></div></div>)}
+            {(role === 'owner' || perms.editProducts) && showAddProduct && (<div className="card grid md:grid-cols-2 lg:grid-cols-4 gap-4"><div className="col-span-full font-semibold text-slate-700">Add New Product</div><div className="lg:col-span-2"><input id="field-25" name="field-25" className="input-field" placeholder="Product Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div><div><input id="field-26" name="field-26" className="input-field" type="number" placeholder={form.isCommodity ? `Price per ${form.unit}` : "Price"} value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} /></div>{settings.showCosts && <div><input id="field-27" name="field-27" className="input-field" type="number" placeholder={form.isCommodity ? `Cost per ${form.unit}` : "Cost"} value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} /></div>}<div><input id="field-28" name="field-28" className="input-field" type="number" placeholder={form.isCommodity ? `Stock (${form.unit})` : "Stock"} value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} /></div>{settings.trackExpiry !== false && <div><label className="text-xs text-slate-500 font-medium block mb-1">Expiry Date</label><input id="field-29" name="field-29" type="month" className="input-field" value={form.expiryDate} onChange={e => setForm({ ...form, expiryDate: e.target.value })} /></div>}<div><input id="field-30" name="field-30" className="input-field" list="category-list" placeholder="Category" value={form.cat} onChange={e => setForm({ ...form, cat: e.target.value })} /><datalist id="category-list">{cats.map(c => <option key={c} value={c} />)}</datalist></div><div className="col-span-full lg:col-span-2"><div className="relative flex-1 flex gap-2"><div className="relative flex-1"><input id="field-31" name="field-31" className="input-field pr-8" placeholder="Barcode (Optional)" value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} />{settings.showScan && <button onClick={() => setScannerMode('fill')} className="absolute right-2 top-2.5 text-slate-400 hover:text-emerald-600"><Scan className="w-4 h-4" /></button>}</div><button onClick={(e) => { e.preventDefault(); let newBarcode; let exists = true; const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; const numbers = "0123456789"; while (exists) { newBarcode = ""; for (let i = 0; i < 10; i++) newBarcode += numbers.charAt(Math.floor(Math.random() * numbers.length)); exists = products.some(p => p.barcode === newBarcode); } setForm({...form, code: newBarcode}); }} className="bg-indigo-100 text-indigo-700 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-200 shrink-0">Generate</button></div></div><div className="col-span-full flex justify-between items-center mt-2"><div className="flex items-center gap-4"><div className="flex items-center gap-2"><input type="checkbox" id="isCommodityAdd" checked={form.isCommodity} onChange={e => setForm({ ...form, isCommodity: e.target.checked })} className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500" /><label htmlFor="isCommodityAdd" className="text-sm font-medium text-slate-700">Commodity</label></div>{form.isCommodity && (<select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} className="input-field py-1 text-sm w-24"><option value="Kg">Kg</option><option value="L">L</option></select>)}</div><button onClick={addProd} className="btn-primary px-6"><Plus className="w-4 h-4" /> Add</button></div></div>)}
             
             {role === 'owner' && <div className="flex gap-4 mb-4 border-b border-slate-200">
               <button onClick={() => setProdTab('manage')} className={`pb-3 px-2 font-semibold text-sm border-b-2 transition-colors ${prodTab === 'manage' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>Manage Products</button>
@@ -2034,7 +2034,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
               {role === 'owner' && selectedIds.size > 0 && <button onClick={() => handleCreateOrder(products.filter(p => selectedIds.has((p && p.id))))} className="btn-primary bg-blue-600 hover:bg-blue-700 py-2 px-4 whitespace-nowrap"><Truck className="w-4 h-4" /> Order ({selectedIds.size})</button>}
               {role === 'owner' && selectedIds.size > 0 && <button onClick={() => { setShowShoppingListModal(true); setShoppingListItems(products.filter(p => selectedIds.has((p && p.id))).map(p => ({ ...p, qty: 1 }))); }} className="btn-primary bg-emerald-600 hover:bg-emerald-700 py-2 px-4 whitespace-nowrap"><ClipboardList className="w-4 h-4" /> Create shopping list</button>}
             </div>
-            <div>{role === 'owner' && filtered.length > 0 && (<div className="flex items-center gap-2 mb-3 px-1"><input id="field-33" name="field-33" type="checkbox" onChange={handleSelectAll} checked={selectedIds.size === filtered.length && filtered.length > 0} className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500" /><span className="text-xs text-slate-500 font-medium">Select all ({filtered.length})</span></div>)}<div className="grid grid-cols-1 md:grid-cols-2 gap-3"><ErrorBoundary>{filtered.slice((currentPage - 1) * 50, currentPage * 50).map(p => { const safePrice = Number(p.price) || 0; const safeCost = Number(p.cost) || 0; const safeStock = Number(p.stock) || 0; const isEdit = editId === (p && p.id); if (isEdit) { return (<div key={(p && p.id)} className="bg-white rounded-2xl border-2 border-emerald-300 shadow-sm p-4 md:col-span-2"><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><input id="field-34" name="field-34" className="input-field py-2 text-sm" placeholder="Name" value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} /><div className="flex gap-2"><input id="field-35" name="field-35" className="input-field py-2 text-xs font-mono flex-1" placeholder="Barcode" value={editData.barcode || ''} onChange={e => setEditData({ ...editData, barcode: e.target.value })} /><button onClick={(e) => { e.preventDefault(); let newBarcode; let exists = true; const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; const numbers = "0123456789"; while (exists) { newBarcode = ""; for (let i = 0; i < 3; i++) newBarcode += letters.charAt(Math.floor(Math.random() * letters.length)); for (let i = 0; i < 5; i++) newBarcode += numbers.charAt(Math.floor(Math.random() * numbers.length)); exists = products.some(p => p.barcode === newBarcode && p.id !== editData.id); } setEditData({...editData, barcode: newBarcode}); }} className="bg-indigo-100 text-indigo-700 px-3 rounded-lg text-xs font-semibold hover:bg-indigo-200 shrink-0">Auto</button></div>{(role === 'owner' || perms.editPriceAndCost) ? <input id="field-36" name="field-36" type="number" className="input-field py-2" placeholder="Price" value={editData.price ?? ''} onChange={e => setEditData({ ...editData, price: parseFloat(e.target.value) })} /> : <div className="py-2 text-slate-600">Ksh. {(Number(editData.price) || 0).toLocaleString()}</div>}{canViewCosts && ((role === 'owner' || perms.editPriceAndCost) ? <input id="field-37" name="field-37" type="number" className="input-field py-2" placeholder="Cost" value={editData.cost ?? ''} onChange={e => setEditData({ ...editData, cost: parseFloat(e.target.value) })} /> : <div className="py-2 text-slate-500">Cost: Ksh. {(Number(editData.cost) || 0).toLocaleString()}</div>)}<input id="field-38" name="field-38" type="number" className="input-field py-2" placeholder="Stock" value={editData.stock ?? ''} onChange={e => setEditData({ ...editData, stock: parseFloat(e.target.value) })} /><input id="field-39" name="field-39" className="input-field py-2" placeholder="Category" value={editData.category || ''} onChange={e => setEditData({ ...editData, category: e.target.value })} />{settings.trackExpiry !== false && <input id="field-40" name="field-40" type="month" className="input-field py-2" value={editData.expiryDate || ''} onChange={e => setEditData({ ...editData, expiryDate: e.target.value })} />}<div className="flex items-center gap-2"><input type="checkbox" id={`commodity-edit-${(p && p.id)}`} checked={!!editData.isCommodity} onChange={e => setEditData({ ...editData, isCommodity: e.target.checked })} className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" /><label htmlFor={`commodity-edit-${(p && p.id)}`} className="text-xs font-medium">Commodity</label>{!!editData.isCommodity && (<select value={editData.unit || 'Kg'} onChange={e => setEditData({ ...editData, unit: e.target.value })} className="input-field py-1 text-xs w-20"><option value="Kg">Kg</option><option value="L">L</option></select>)}</div></div><div className="flex justify-end gap-2 mt-3"><button onClick={() => setEditId(null)} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium flex items-center gap-1"><X className="w-4 h-4" /> Cancel</button><button onClick={() => { 
+            <div>{role === 'owner' && filtered.length > 0 && (<div className="flex items-center gap-2 mb-3 px-1"><input id="field-33" name="field-33" type="checkbox" onChange={handleSelectAll} checked={selectedIds.size === filtered.length && filtered.length > 0} className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500" /><span className="text-xs text-slate-500 font-medium">Select all ({filtered.length})</span></div>)}<div className="grid grid-cols-1 md:grid-cols-2 gap-3"><ErrorBoundary>{filtered.slice((currentPage - 1) * 50, currentPage * 50).map(p => { const safePrice = Number(p.price) || 0; const safeCost = Number(p.cost) || 0; const safeStock = Number(p.stock) || 0; const isEdit = editId === (p && p.id); if (isEdit) { return (<div key={(p && p.id)} className="bg-white rounded-2xl border-2 border-emerald-300 shadow-sm p-4 md:col-span-2"><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><input id="field-34" name="field-34" className="input-field py-2 text-sm" placeholder="Name" value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} /><div className="flex gap-2"><input id="field-35" name="field-35" className="input-field py-2 text-xs font-mono flex-1" placeholder="Barcode" value={editData.barcode || ''} onChange={e => setEditData({ ...editData, barcode: e.target.value })} /><button onClick={(e) => { e.preventDefault(); let newBarcode; let exists = true; const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; const numbers = "0123456789"; while (exists) { newBarcode = ""; for (let i = 0; i < 10; i++) newBarcode += numbers.charAt(Math.floor(Math.random() * numbers.length)); exists = products.some(p => p.barcode === newBarcode && p.id !== editData.id); } setEditData({...editData, barcode: newBarcode}); }} className="bg-indigo-100 text-indigo-700 px-3 rounded-lg text-xs font-semibold hover:bg-indigo-200 shrink-0">Auto</button></div>{(role === 'owner' || perms.editPriceAndCost) ? <input id="field-36" name="field-36" type="number" className="input-field py-2" placeholder="Price" value={editData.price ?? ''} onChange={e => setEditData({ ...editData, price: parseFloat(e.target.value) })} /> : <div className="py-2 text-slate-600">Ksh. {(Number(editData.price) || 0).toLocaleString()}</div>}{canViewCosts && ((role === 'owner' || perms.editPriceAndCost) ? <input id="field-37" name="field-37" type="number" className="input-field py-2" placeholder="Cost" value={editData.cost ?? ''} onChange={e => setEditData({ ...editData, cost: parseFloat(e.target.value) })} /> : <div className="py-2 text-slate-500">Cost: Ksh. {(Number(editData.cost) || 0).toLocaleString()}</div>)}<input id="field-38" name="field-38" type="number" className="input-field py-2" placeholder="Stock" value={editData.stock ?? ''} onChange={e => setEditData({ ...editData, stock: parseFloat(e.target.value) })} /><input id="field-39" name="field-39" className="input-field py-2" placeholder="Category" value={editData.category || ''} onChange={e => setEditData({ ...editData, category: e.target.value })} />{settings.trackExpiry !== false && <input id="field-40" name="field-40" type="month" className="input-field py-2" value={editData.expiryDate || ''} onChange={e => setEditData({ ...editData, expiryDate: e.target.value })} />}<div className="flex items-center gap-2"><input type="checkbox" id={`commodity-edit-${(p && p.id)}`} checked={!!editData.isCommodity} onChange={e => setEditData({ ...editData, isCommodity: e.target.checked })} className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" /><label htmlFor={`commodity-edit-${(p && p.id)}`} className="text-xs font-medium">Commodity</label>{!!editData.isCommodity && (<select value={editData.unit || 'Kg'} onChange={e => setEditData({ ...editData, unit: e.target.value })} className="input-field py-1 text-xs w-20"><option value="Kg">Kg</option><option value="L">L</option></select>)}</div></div><div className="flex justify-end gap-2 mt-3"><button onClick={() => setEditId(null)} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium flex items-center gap-1"><X className="w-4 h-4" /> Cancel</button><button onClick={() => { 
   const normCat = normalizeCategory(editData.category);
   const editName = (editData.name || '').toLowerCase().trim();
   const editPrice = parseFloat(editData.price) || 0;
@@ -3576,6 +3576,28 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
         </div>
         <ConnectDatabaseSection />
         <CloudRecoverySection />
+
+        <div className="bg-red-50 p-6 rounded-2xl border border-red-200 mt-6 shadow-sm">
+          <h3 className="font-bold text-lg mb-2 flex items-center gap-2 text-red-700">
+            <AlertTriangle className="w-5 h-5" /> Danger Zone
+          </h3>
+          <p className="text-sm text-red-600 mb-4">
+            Irreversible actions that wipe data from the database. Please proceed with extreme caution.
+          </p>
+          <button 
+            onClick={() => {
+              if(confirm('Are you ABSOLUTELY SURE you want to DELETE ALL PRODUCTS? This action cannot be undone and will wipe out all inventory!')) {
+                 const doWipe = confirm('Final confirmation. Do you want to permanently erase every product from this database and local storage?');
+                 if(doWipe) {
+                   if(updateProducts) updateProducts([]);
+                   toast.success('All products have been permanently deleted.');
+                 }
+              }
+            }} 
+            className="w-full py-3 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors">
+            <Trash2 className="w-5 h-5" /> Wipe All Products
+          </button>
+        </div>
       </div>
         {showFullImportModal && (
           <FullDataImportModal
@@ -5020,10 +5042,7 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     const numbers = '0123456789';
     while (exists) {
       newBarcode = '';
-      for (let i = 0; i < 3; i++) {
-        newBarcode += letters.charAt(Math.floor(Math.random() * letters.length));
-      }
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         newBarcode += numbers.charAt(Math.floor(Math.random() * numbers.length));
       }
       exists = existingProducts.some(p => p.barcode === newBarcode);
@@ -5031,13 +5050,29 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     return newBarcode;
   };
 
-  const handleClearAllBarcodes = async () => {
-    if (!confirm('Are you sure you want to delete ALL barcodes? This cannot be undone.')) return;
-    const tempProducts = products.map(p => ({ ...p, barcode: undefined }));
+  const handleClearSelectedBarcodes = async () => {
+    if (Object.keys(printSelections).length === 0) {
+      toast.error('No barcodes in the print list to delete.');
+      return;
+    }
+    if (!confirm('Are you sure you want to delete the barcodes of the products currently in the print list?')) return;
+    
+    const barcodesToDelete = new Set(Object.keys(printSelections));
+    const tempProducts = products.map(p => {
+      if (p.barcode && barcodesToDelete.has(p.barcode)) {
+        return { ...p, barcode: undefined };
+      }
+      return p;
+    });
+    
     if (setProducts) await setProducts(tempProducts);
+    
+    const newIds = new Set(selectedProductIds);
+    Object.values(printSelections).forEach(s => newIds.add(s.productId));
+    setSelectedProductIds(newIds);
     setPrintSelections({});
-    setSelectedProductIds(new Set());
-    toast.success('All barcodes deleted.');
+    
+    toast.success('Selected barcodes deleted.');
   };
 
   const handleBulkGenerate = async () => {
@@ -5080,7 +5115,16 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
         const numCopies = parseInt(settings.numCopies) || 1;
         const widthMm = settings.width || 20;
         const heightMm = settings.height || 10;
-        const textHeightMm = 3; 
+        
+        // Dynamically shrink text and calculate total height
+        let fontSize = 6;
+        doc.setFontSize(fontSize);
+        while (doc.getTextWidth(prod.name) > widthMm - 1 && fontSize > 3) {
+          fontSize -= 0.5;
+          doc.setFontSize(fontSize);
+        }
+        let textLines = doc.splitTextToSize(prod.name, widthMm - 1);
+        const textHeightMm = textLines.length * (fontSize * 0.4) + 1; 
         const totalItemHeightMm = heightMm + textHeightMm;
 
         for (let i = 0; i < numCopies; i++) {
@@ -5113,21 +5157,16 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
 
           doc.addImage(barcodeDataUrl, 'PNG', x, y, widthMm, heightMm);
           
-          doc.setFontSize(6);
+          doc.setFontSize(fontSize);
           doc.setTextColor(0, 0, 0);
           
-          // Split text to strictly fit within the width
-          let textLines = doc.splitTextToSize(prod.name, widthMm - 1);
-          let displayName = textLines[0];
-          if (textLines.length > 1) {
-            // Trim 2 chars to fit '..'
-            displayName = displayName.substring(0, displayName.length - 2) + '..';
+          let textY = y + heightMm + (fontSize * 0.4);
+          for (let line of textLines) {
+            const textWidth = doc.getTextWidth(line);
+            const textX = x + (widthMm / 2) - (textWidth / 2);
+            doc.text(line, textX, textY);
+            textY += fontSize * 0.4;
           }
-          
-          const textWidth = doc.getTextWidth(displayName);
-          const textX = x + (widthMm / 2) - (textWidth / 2);
-          const textY = y + heightMm + 2;
-          doc.text(displayName, textX, textY);
 
           x += widthMm + spacingX;
           if (totalItemHeightMm > maxRowHeight) {
@@ -5217,7 +5256,6 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     try {
       await generatePDF(selectedBarcodes, products);
       toast.success("Barcodes PDF generated successfully!");
-      onClose();
     } catch (err) {
       console.error(err);
       toast.error("Failed to generate Barcodes PDF.");
@@ -5253,8 +5291,8 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
               }} className="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium">
                 Select All Missing Barcodes
               </button>
-              <button onClick={handleClearAllBarcodes} className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
-                Delete All Barcodes
+              <button onClick={handleClearSelectedBarcodes} className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium" title="Deletes only the barcodes currently in the print selection list">
+                Delete Generated Barcodes
               </button>
             </div>
             
