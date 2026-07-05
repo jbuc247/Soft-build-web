@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
       Package, DollarSign, PieChart, Settings as SettingsIcon, LogOut, Calculator as CalcIcon,
       Phone, ShieldCheck, Plus, Scan, Trash2, Edit2, PackagePlus, Check, X,
       FileText, ClipboardList, Lock, Eye, EyeOff, Volume2, Upload, Download, Music,
-      Search, AlertTriangle, MessageCircle, AlertCircle, QrCode, Zap, Copy,
+      Search, AlertTriangle, MessageCircle, AlertCircle, QrCode, Barcode, Zap, Copy,
       Loader2, Delete, Clock, Key, Tag, Printer, UserPlus, ShoppingCart, Percent, Tag as TagIcon, Save,
       Truck, Bell, Send, Play, Calendar, Menu, RefreshCw
     } from 'lucide-react';
@@ -15,6 +15,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
     import autoTable from 'jspdf-autotable';
     import { Html5Qrcode, Html5QrcodeScanner, Html5QrcodeSupportedFormats, Html5QrcodeScannerState } from 'html5-qrcode';
     import QRCode from 'qrcode';
+    import JsBarcode from 'jsbarcode';
     import CryptoJS from 'crypto-js';
     
     window.LOGO_DATA = '/logo.png';
@@ -1884,7 +1885,14 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
         processSale(saleDetails);
       };
       function addStock(p, q) { const updated = products.map(x => x.id === (p && p.id) ? { ...x, stock: x.stock + q } : x); setProducts(updated); setStockHistory([...stockHistory, { name: p.name, qty: q, action: 'Added', barcode: p.barcode, date: new Date().toISOString(), cashierName: currentUser?.name }]); toast.success(`+${q} Stock: ${p.name}`, { duration: 1500 }); };
-      const handleScan = (code) => { const p = products.find(x => x.barcode === code); if (scannerMode === 'sell') { if (!p) { toast.error('Product not found', { duration: 1500 }); return; } addToCart(p); setScannerMode(null); return; } if (scannerMode === 'stock') { if (!p) { toast.error('Product not found', { duration: 1500 }); return; } setScannerMode(null); const q = prompt(`Add Stock for "${p.name}":`, '1'); if (q !== null) { const n = parseFloat(q); if (!isNaN(n) && n > 0) addStock(p, n); else toast.error('Invalid quantity'); } return; } setScannerMode(null); if (scannerMode === 'fill') { if (editId) setEditData({ ...editData, barcode: code }); else setForm({ ...form, code }); toast.success('Barcode scanned'); } else if (scannerMode === 'update') { if (products.some(x => x.barcode === code && x.id !== updateId)) { toast.error('Barcode is already taken'); } else { setProducts(products.map(x => x.id === updateId ? { ...x, barcode: code } : x)); toast.success('Barcode updated'); } setUpdateId(null); } };
+      const handleScan = (code) => { 
+        const p = products.find(x => x.barcode === code || (x.savedQRCodes && x.savedQRCodes.some(qr => qr.id === code))); 
+        if (scannerMode === 'sell') { if (!p) { toast.error('Product not found', { duration: 1500 }); return; } addToCart(p); setScannerMode(null); return; } 
+        if (scannerMode === 'stock') { if (!p) { toast.error('Product not found', { duration: 1500 }); return; } setScannerMode(null); const q = prompt(`Add Stock for "${p.name}":`, '1'); if (q !== null) { const n = parseFloat(q); if (!isNaN(n) && n > 0) addStock(p, n); else toast.error('Invalid quantity'); } return; } 
+        setScannerMode(null); 
+        if (scannerMode === 'fill') { if (editId) setEditData({ ...editData, barcode: code }); else setForm({ ...form, code }); toast.success('Barcode scanned'); } 
+        else if (scannerMode === 'update') { if (products.some(x => (x.barcode === code || (x.savedQRCodes && x.savedQRCodes.some(qr => qr.id === code))) && x.id !== updateId)) { toast.error('Barcode is already taken'); } else { setProducts(products.map(x => x.id === updateId ? { ...x, barcode: code } : x)); toast.success('Barcode updated'); } setUpdateId(null); } 
+      };
 
       const cats = useMemo(() => [...new Set(products.map(p => (p && p.category)))].filter(Boolean).sort((a, b) => a.localeCompare(b)), [products]);
       const filtered = useMemo(() => {
@@ -2479,7 +2487,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 
     const SummaryPanel = ({ products, setProducts, salesHistory, setSalesHistory, expenses, debts, settings, stockHistory, setStockHistory, currentUser, onCancelSale }) => {
       const [view, setView] = useState('none');
-      const [showQRGenerator, setShowQRGenerator] = useState(false);
+      const [showBarcodeGenerator, setShowBarcodeGenerator] = useState(false);
       const [salesSearch, setSalesSearch] = useState(''); const [stockSearch, setStockSearch] = useState('');
       const [salesDateRange, setSalesDateRange] = useState({ start: '', end: '' });
       const [stockDateRange, setStockDateRange] = useState({ start: '', end: '' });
@@ -2691,11 +2699,11 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
           <button onClick={generateCompactProductPdf} className="flex justify-center items-center gap-2 bg-[#1abc9c] hover:bg-[#16a085] text-white px-8 py-3 rounded-xl shadow-md font-bold text-sm transition-all hover:shadow-lg w-full">
             <Printer className="w-5 h-5" /> Print Compact Stock Filling PDF
           </button>
-          <button onClick={() => setShowQRGenerator(true)} className="flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl shadow-md font-bold text-sm transition-all hover:shadow-lg w-full">
-            <QrCode className="w-5 h-5" /> Generate QR Codes
+          <button onClick={() => setShowBarcodeGenerator(true)} className="flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl shadow-md font-bold text-sm transition-all hover:shadow-lg w-full">
+            <Barcode className="w-5 h-5" /> Generate Barcodes
           </button>
         </div>
-        {showQRGenerator && <QRGeneratorModal products={products} setProducts={setProducts} onClose={() => setShowQRGenerator(false)} />}
+        {showBarcodeGenerator && <BarcodeGeneratorModal products={products} setProducts={setProducts} onClose={() => setShowBarcodeGenerator(false)} />}
         {view === 'sales' && (<HistoryModal title="Sales History" searchVal={salesSearch} onSearchChange={setSalesSearch} dateRange={salesDateRange} onDateChange={setSalesDateRange} onClose={() => setView('none')} onClear={() => clear('sales')} canDelete={currentUser?.role === 'owner'}><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium sticky top-0"><tr><th className="p-3">Date</th><th className="p-3">Product</th><th className="p-3">Qty</th><th className="p-3">Method</th><th className="p-3">Cashier</th><th className="p-3 text-right">Discount</th><th className="p-3 text-right">Total</th>{currentUser?.role === 'owner' && <th className="p-3 text-right">Action</th>}</tr></thead><tbody className="divide-y divide-slate-100">{filteredSales.slice((salesCurrentPage - 1) * 50, salesCurrentPage * 50).map(s => <tr key={s.id} className="hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(s.date).toLocaleString()}</td><td className="p-3 font-medium text-slate-800">{s.name}</td><td className="p-3">{s.quantity}</td><td className="p-3 uppercase text-xs font-bold text-slate-500">{s.paymentMethod}</td><td className="p-3 text-slate-500">{s.cashierName}</td><td className="p-3 text-right font-medium text-red-500">{s.discount?.value > 0 ? (s.discount?.type === 'percent' ? `${s.discount.value}%` : `Ksh. ${parseFloat(s.discount.value).toLocaleString()}`) : '-'}</td><td className="p-3 text-right font-bold text-emerald-600">Ksh. {(s.finalPrice).toLocaleString()}</td>{currentUser?.role === 'owner' && (<td className="p-3 text-right"><button onClick={() => onCancelSale(s.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg disabled:text-slate-300 disabled:hover:bg-transparent" title="Cancel Sale" disabled={s.paymentMethod === 'debt'}><Trash2 className="w-4 h-4" /></button></td>)}</tr>)}</tbody></table><Pagination totalItems={filteredSales.length} itemsPerPage={50} currentPage={salesCurrentPage} setCurrentPage={setSalesCurrentPage} /></HistoryModal>)}
         {view === 'stock' && (<HistoryModal title="Stock History" searchVal={stockSearch} onSearchChange={setStockSearch} dateRange={stockDateRange} onDateChange={setStockDateRange} onClose={() => setView('none')} onClear={() => clear('stock')}><table className="w-full text-sm text-left"><thead className="bg-slate-50 text-slate-500 font-medium sticky top-0"><tr><th className="p-3">Date</th><th className="p-3">Product</th><th className="p-3">Added by</th><th className="p-3 text-right">Qty Added</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredStock.slice((stockCurrentPage - 1) * 50, stockCurrentPage * 50).map((s, i) => <tr key={i} className="hover:bg-slate-50"><td className="p-3 text-slate-500">{new Date(s.date).toLocaleString()}</td><td className="p-3 font-medium text-slate-800">{s.name}</td><td className="p-3 text-slate-500">{s.cashierName}</td><td className="p-3 text-right font-bold text-blue-600">+{s.qty}</td></tr>)}</tbody></table><Pagination totalItems={filteredStock.length} itemsPerPage={50} currentPage={stockCurrentPage} setCurrentPage={setStockCurrentPage} /></HistoryModal>)}
       </div>);
@@ -4975,273 +4983,299 @@ id,name,qty,barcode,date,cashierName
       </div>);
     };
 
-    const QRGeneratorModal = ({ products, setProducts, onClose }) => {
-      const [searchTerm, setSearchTerm] = useState('');
-      const [selectedIds, setSelectedIds] = useState([]);
-      const [copies, setCopies] = useState({});
-      const [colors, setColors] = useState({});
-      const [qrSize, setQrSize] = useState(2);
-      const [qrSpacing, setQrSpacing] = useState(2);
-      const [isSpecialized, setIsSpecialized] = useState(false);
-      const [sizes, setSizes] = useState({});
-      const [isGenerating, setIsGenerating] = useState(false);
+export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // By default, select all products that don't have a barcode
+  const [selectedProductIds, setSelectedProductIds] = useState(() => {
+    const ids = new Set();
+    products.forEach(p => {
+      if (!p.barcode) ids.add(p.id);
+    });
+    return ids;
+  });
+  
+  // printSelections: qr.id (using p.barcode) -> { numCopies, width, height, productId }
+  const [printSelections, setPrintSelections] = useState({});
+  const [isGenerating, setIsGenerating] = useState(false);
 
-      const handleColorChange = (id, newColor) => {
-        const usedInDb = products.find(p => p.id !== id && p.qrColor === newColor);
-        const usedInState = Object.entries(colors).find(([prodId, c]) => prodId !== id && c === newColor);
-        if (usedInDb || usedInState) {
-          toast.error("This color is already used by another product.");
-          return;
-        }
-        setColors(prev => ({...prev, [id]: newColor}));
-      };
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-      const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const toggleProductSelect = (id) => {
+    const next = new Set(selectedProductIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedProductIds(next);
+  };
 
-      const toggleSelect = (id) => {
-        setSelectedIds(prev => {
-          const isSelected = prev.includes(id);
-          if (isSelected) {
-            return prev.filter(i => i !== id);
-          } else {
-            const prod = products.find(p => p.id === id);
-            setCopies(c => ({...c, [id]: c[id] || 1}));
-            setColors(c => ({...c, [id]: c[id] || prod?.qrColor || '#000000'}));
-            return [...prev, id];
+  const generateUniqueBarcode = (existingProducts) => {
+    let newBarcode;
+    let exists = true;
+    while (exists) {
+      // Generate 10-digit random number
+      newBarcode = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+      exists = existingProducts.some(p => p.barcode === newBarcode);
+    }
+    return newBarcode;
+  };
+
+  const handleBulkGenerate = async () => {
+    if (selectedProductIds.size === 0) return;
+    
+    // We will build a new array of products
+    let tempProducts = [...products];
+    const newSelections = { ...printSelections };
+    
+    tempProducts = tempProducts.map(p => {
+      if (selectedProductIds.has(p.id)) {
+        // Double check if it already has a barcode, though it shouldn't
+        const newBarcode = p.barcode || generateUniqueBarcode(tempProducts);
+        newSelections[newBarcode] = { numCopies: 1, width: 20, height: 10, productId: p.id };
+        return { ...p, barcode: newBarcode };
+      }
+      return p;
+    });
+    
+    if (setProducts) await setProducts(tempProducts);
+    setPrintSelections(prev => ({ ...prev, ...newSelections })); 
+    setSelectedProductIds(new Set());
+    toast.success('Bulk generated Barcodes');
+  };
+
+  const handleGenerateNewBarcode = async (productId) => {
+    let tempProducts = [...products];
+    let newBarcode = null;
+    const updated = tempProducts.map(p => {
+      if (p.id === productId) {
+         newBarcode = generateUniqueBarcode(tempProducts);
+         return { ...p, barcode: newBarcode };
+      }
+      return p;
+    });
+    if (setProducts) await setProducts(updated);
+    if (newBarcode) {
+      setPrintSelections(prev => ({...prev, [newBarcode]: { numCopies: 1, width: 20, height: 10, productId }}));
+    }
+  };
+
+  const togglePrintSelect = (barcode, productId) => {
+    setPrintSelections(prev => {
+      const next = { ...prev };
+      if (next[barcode]) {
+        delete next[barcode];
+      } else {
+        next[barcode] = { numCopies: 1, width: 20, height: 10, productId };
+      }
+      return next;
+    });
+  };
+
+  const updatePrintSelection = (barcode, field, value) => {
+    setPrintSelections(prev => {
+      if (!prev[barcode]) return prev;
+      return { ...prev, [barcode]: { ...prev[barcode], [field]: value } };
+    });
+  };
+
+  const handlePrint = async () => {
+    const selectedBarcodes = Object.entries(printSelections);
+    if (selectedBarcodes.length === 0) {
+      toast.error("Please select at least one barcode to print.");
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const margin = 5;
+      const spacingX = 2; // spacing between labels horizontally
+      const spacingY = 4; // spacing between labels vertically to account for text
+      const pageWidth = 210;
+      const pageHeight = 297;
+      
+      let x = margin;
+      let y = margin;
+      
+      let maxRowHeight = 0;
+
+      for (const [barcode, settings] of selectedBarcodes) {
+        const prod = products.find(p => p.id === settings.productId);
+        if (!prod) continue;
+
+        const numCopies = parseInt(settings.numCopies) || 1;
+        const widthMm = settings.width || 20;
+        const heightMm = settings.height || 10;
+        
+        // Product name height estimation
+        const textHeightMm = 3; 
+        const totalItemHeightMm = heightMm + textHeightMm;
+
+        for (let i = 0; i < numCopies; i++) {
+          // Check if we need to wrap to next line
+          if (x + widthMm > pageWidth - margin) {
+            x = margin;
+            y += maxRowHeight + spacingY;
+            maxRowHeight = 0;
           }
-        });
-      };
+          
+          // Check if we need a new page
+          if (y + totalItemHeightMm > pageHeight - margin) {
+            doc.addPage();
+            x = margin;
+            y = margin;
+            maxRowHeight = 0;
+          }
 
-      const handleGenerate = async () => {
-        if (selectedIds.length === 0) {
-          toast.error("Please select at least one product.");
-          return;
-        }
-        setIsGenerating(true);
-        try {
-          // Save colors and sizes to products
-          let productsUpdated = false;
-          const updatedProducts = products.map(p => {
-            if (selectedIds.includes(p.id)) {
-              let changed = false;
-              let newP = { ...p };
-              if (isSpecialized && colors[p.id] && p.qrColor !== colors[p.id]) {
-                newP.qrColor = colors[p.id];
-                changed = true;
-              }
-              if (isSpecialized && sizes[p.id] && p.qrSize !== sizes[p.id]) {
-                newP.qrSize = sizes[p.id];
-                changed = true;
-              }
-              if (changed) {
-                productsUpdated = true;
-                return newP;
-              }
-            }
-            return p;
+          // Generate barcode image using jsbarcode on a canvas
+          const canvas = document.createElement('canvas');
+          JsBarcode(canvas, barcode, {
+            format: "CODE128",
+            displayValue: false,
+            margin: 0
           });
+          const barcodeDataUrl = canvas.toDataURL('image/png');
+
+          // Draw dotted border
+          doc.setDrawColor(150, 150, 150);
+          doc.setLineWidth(0.2);
+          doc.setLineDashPattern([1, 1], 0);
+          doc.rect(x, y, widthMm, totalItemHeightMm);
+          doc.setLineDashPattern([], 0); // reset
+
+          // Add Barcode Image
+          doc.addImage(barcodeDataUrl, 'PNG', x, y, widthMm, heightMm);
           
-          if (productsUpdated && setProducts) {
-            await setProducts(updatedProducts);
+          // Add Product Name beneath the barcode
+          doc.setFontSize(6);
+          doc.setTextColor(0, 0, 0);
+          // truncated name if too long
+          let displayName = prod.name;
+          if (displayName.length > 20) {
+            displayName = displayName.substring(0, 17) + '...';
           }
+          const textWidth = doc.getTextWidth(displayName);
+          const textX = x + (widthMm / 2) - (textWidth / 2);
+          const textY = y + heightMm + 2; // 2mm below the barcode image
+          doc.text(displayName, textX, textY);
 
-          const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-          });
-
-          const margin = 2;
-          const spacing = Number(qrSpacing) || 2;
-          const dividerThickness = 0.4;
-          
-          const pageWidth = 210;
-          const pageHeight = 297;
-          
-          let x = margin;
-          let y = margin;
-          let previousItemHeight = isSpecialized ? (sizes[selectedIds[0]] || qrSize) * 10 : qrSize * 10;
-          
-          let isFirstProduct = true;
-
-          for (const id of selectedIds) {
-            const prod = products.find(p => p.id === id);
-            if (!prod) continue;
-
-            const numCopies = parseInt(copies[id]) || 1;
-            const color = isSpecialized ? (colors[id] || '#000000') : '#000000';
-            const prodSize = isSpecialized ? (sizes[id] || qrSize) : qrSize;
-            const sizeMm = prodSize * 10;
-            const itemHeight = sizeMm;
-            const itemWidth = sizeMm;
-
-            if (!isFirstProduct) {
-              if (x + itemWidth > pageWidth - margin) {
-                // New product won't fit on current line, naturally wrap it
-                x = margin;
-                y += previousItemHeight + spacing;
-                
-                if (y + itemHeight > pageHeight - margin) {
-                  doc.addPage();
-                  x = margin;
-                  y = margin;
-                } else {
-                  // Draw horizontal divider since it's a new product starting on a new line
-                  doc.setDrawColor(255, 0, 0);
-                  doc.setLineWidth(dividerThickness);
-                  doc.line(margin, y - (spacing / 2), pageWidth - margin, y - (spacing / 2));
-                }
-              } else {
-                // New product fits on the current line. Draw vertical divider to separate them!
-                if (x !== margin) {
-                  doc.setDrawColor(255, 0, 0);
-                  doc.setLineWidth(dividerThickness);
-                  const lineX = x - (spacing / 2);
-                  const lineH = Math.max(previousItemHeight, itemHeight);
-                  doc.line(lineX, y, lineX, y + lineH);
-                }
-              }
-            }
-            isFirstProduct = false;
-
-            const qrDataUrl = await QRCode.toDataURL(prod.name || prod.id.toString(), {
-              color: {
-                dark: color,
-                light: '#ffffff'
-              },
-              margin: 0,
-              width: 512
-            });
-
-            for (let i = 0; i < numCopies; i++) {
-              if (x + itemWidth > pageWidth - margin) {
-                x = margin;
-                y += itemHeight + spacing;
-              }
-              if (y + itemHeight > pageHeight - margin) {
-                doc.addPage();
-                x = margin;
-                y = margin;
-              }
-
-              doc.addImage(qrDataUrl, 'PNG', x, y, itemWidth, sizeMm);
-              x += itemWidth + spacing;
-            }
-            previousItemHeight = itemHeight;
+          x += widthMm + spacingX;
+          if (totalItemHeightMm > maxRowHeight) {
+            maxRowHeight = totalItemHeightMm;
           }
-
-          doc.save('Product_QRCodes.pdf');
-          toast.success("QR Codes generated successfully!");
-          onClose();
-        } catch (err) {
-          console.error(err);
-          toast.error("Failed to generate QR codes.");
-        } finally {
-          setIsGenerating(false);
         }
-      };
+      }
 
-      return (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-4 border-b flex justify-between items-center bg-slate-50">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <QrCode className="w-6 h-6 text-indigo-600" /> Generate QR Codes
-              </h2>
-              <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
-                <X className="w-5 h-5" />
+      doc.save('Barcodes.pdf');
+      toast.success("Barcodes PDF generated successfully!");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate Barcodes PDF.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <Barcode className="w-6 h-6 text-indigo-600" /> Manage & Print Barcodes
+          </h2>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-4 border-b bg-white flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-2 w-full md:w-auto flex-1">
+            <Search className="w-5 h-5 text-slate-400" />
+            <input type="text" placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none w-full text-sm" />
+          </div>
+          
+          <div className="flex items-center gap-4 flex-wrap">
+            {selectedProductIds.size > 0 && (
+              <button onClick={handleBulkGenerate} className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
+                Bulk Generate for {selectedProductIds.size} Products
               </button>
-            </div>
-
-            <div className="p-4 border-b bg-white flex flex-wrap gap-4 items-center justify-between">
-              <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-2 w-full md:w-auto flex-1">
-                <Search className="w-5 h-5 text-slate-400" />
-                <input type="text" placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none w-full text-sm" />
-              </div>
-              <div className="flex items-center gap-4 flex-wrap">
-                <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 bg-white border px-3 py-1.5 rounded-lg shadow-sm">
-                  <input type="checkbox" checked={isSpecialized} onChange={e => setIsSpecialized(e.target.checked)} className="w-4 h-4 accent-indigo-600 cursor-pointer" />
-                  Specialized
-                </label>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-700">Spacing (mm):</label>
-                  <input type="number" step="0.5" min="0" max="20" value={qrSpacing} onChange={e => setQrSpacing(e.target.value)} className="border p-2 w-20 rounded-lg text-sm bg-slate-50 outline-none" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-700">{isSpecialized ? 'Default Size:' : 'Size:'}</label>
-                  <select value={qrSize} onChange={e => setQrSize(Number(e.target.value))} className="border p-2 rounded-lg text-sm bg-slate-50 outline-none">
-                    <option value={0.5}>0.5 cm</option>
-                    <option value={0.7}>0.7 cm</option>
-                    <option value={0.8}>0.8 cm</option>
-                    <option value={1}>1 cm</option>
-                    <option value={2}>2 cm</option>
-                    <option value={3}>3 cm</option>
-                    <option value={4}>4 cm</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
-              <div className="space-y-3">
-                {filteredProducts.map(prod => {
-                  const isSelected = selectedIds.includes(prod.id);
-                  return (
-                    <div key={prod.id} className={`flex items-center gap-4 p-3 bg-white border rounded-xl transition-all ${isSelected ? 'border-indigo-500 shadow-sm' : 'border-slate-200'}`}>
-                      <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(prod.id)} className="w-5 h-5 accent-indigo-600" />
-                      <div className="flex-1">
-                        <p className="font-bold text-slate-800">{prod.name}</p>
-                        <p className="text-xs text-slate-500">ID: {prod.id} | Stock: {prod.stock}</p>
-                      </div>
-                      {isSelected && (
-                        <div className="flex items-center gap-4 flex-wrap">
-                          <div className="flex flex-col">
-                            <label className="text-xs font-medium text-slate-500 mb-1">Copies</label>
-                            <input type="number" min="1" value={copies[prod.id] || 1} onChange={e => setCopies({...copies, [prod.id]: Math.max(1, parseInt(e.target.value) || 1)})} className="w-20 p-1.5 border rounded-lg text-center outline-none" />
-                          </div>
-                          {isSpecialized && (
-                            <>
-                              <div className="flex flex-col">
-                                <label className="text-xs font-medium text-slate-500 mb-1">Size</label>
-                                <select value={sizes[prod.id] || qrSize} onChange={e => setSizes({...sizes, [prod.id]: Number(e.target.value)})} className="p-1.5 border rounded-lg text-sm outline-none">
-                                  <option value={0.5}>0.5 cm</option>
-                                  <option value={0.7}>0.7 cm</option>
-                                  <option value={0.8}>0.8 cm</option>
-                                  <option value={1}>1 cm</option>
-                                  <option value={2}>2 cm</option>
-                                  <option value={3}>3 cm</option>
-                                  <option value={4}>4 cm</option>
-                                </select>
-                              </div>
-                              <div className="flex flex-col">
-                                <label className="text-xs font-medium text-slate-500 mb-1">Color</label>
-                                <input type="color" value={colors[prod.id] || '#000000'} onChange={e => handleColorChange(prod.id, e.target.value)} className="w-10 h-8 p-0 border-0 rounded cursor-pointer" />
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-                {filteredProducts.length === 0 && <p className="text-center text-slate-500 py-8">No products found.</p>}
-              </div>
-            </div>
-
-            <div className="p-4 border-t bg-white flex justify-between items-center">
-              <p className="text-sm font-medium text-slate-600">{selectedIds.length} products selected</p>
-              <div className="flex gap-3">
-                <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
-                <button onClick={handleGenerate} disabled={isGenerating || selectedIds.length === 0} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2.5 rounded-xl shadow-md font-bold transition-all disabled:opacity-50">
-                  {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
-                  {isGenerating ? 'Generating...' : 'Generate PDF'}
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
-      );
-    };
+
+        <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
+          <div className="space-y-3">
+            {filteredProducts.map(prod => {
+              const isMissingBarcode = !prod.barcode;
+              const isProdSelected = selectedProductIds.has(prod.id);
+              const isPrintSelected = !!printSelections[prod.barcode];
+              const printSettings = printSelections[prod.barcode] || { numCopies: 1, width: 20, height: 10 };
+              
+              return (
+                <div key={prod.id} className={`flex flex-col bg-white border rounded-xl transition-all ${isProdSelected ? 'border-indigo-500 shadow-sm' : 'border-slate-200'}`}>
+                  <div className="flex items-center gap-4 p-3">
+                    {isMissingBarcode ? (
+                      <input type="checkbox" checked={isProdSelected} onChange={() => toggleProductSelect(prod.id)} className="w-5 h-5 accent-indigo-600" title="Select for Bulk Generate" />
+                    ) : (
+                      <input type="checkbox" checked={isPrintSelected} onChange={() => togglePrintSelect(prod.barcode, prod.id)} className="w-5 h-5 accent-emerald-600" title="Select for Printing" />
+                    )}
+                    
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800">{prod.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {prod.barcode ? `Barcode: ${prod.barcode} | ` : 'No Barcode | '} 
+                        Stock: {prod.stock}
+                      </p>
+                    </div>
+                    
+                    {!prod.barcode && (
+                      <button onClick={() => handleGenerateNewBarcode(prod.id)} className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium">
+                        + New Barcode
+                      </button>
+                    )}
+                  </div>
+                  
+                  {isPrintSelected && prod.barcode && (
+                    <div className="border-t p-3 bg-slate-50/50 flex items-center gap-4 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        <label className="text-xs text-slate-500">Copies</label>
+                        <input type="number" min="1" value={printSettings.numCopies} onChange={e => updatePrintSelection(prod.barcode, 'numCopies', Math.max(1, parseInt(e.target.value) || 1))} className="w-16 p-1 border rounded text-xs outline-none" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <label className="text-xs text-slate-500">Width (mm)</label>
+                        <input type="number" min="10" value={printSettings.width} onChange={e => updatePrintSelection(prod.barcode, 'width', Math.max(10, parseInt(e.target.value) || 20))} className="w-16 p-1 border rounded text-xs outline-none" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <label className="text-xs text-slate-500">Height (mm)</label>
+                        <input type="number" min="5" value={printSettings.height} onChange={e => updatePrintSelection(prod.barcode, 'height', Math.max(5, parseInt(e.target.value) || 10))} className="w-16 p-1 border rounded text-xs outline-none" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {filteredProducts.length === 0 && <p className="text-center text-slate-500 py-8">No products found.</p>}
+          </div>
+        </div>
+
+        <div className="p-4 border-t bg-white flex justify-between items-center">
+          <p className="text-sm font-medium text-slate-600">{Object.keys(printSelections).length} Barcodes selected for printing</p>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+            <button onClick={handlePrint} disabled={isGenerating || Object.keys(printSelections).length === 0} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2.5 rounded-xl shadow-md font-bold transition-all disabled:opacity-50">
+              {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
+              {isGenerating ? 'Generating PDF...' : 'Print Selected'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
     const App = () => {
       // --- SESSION PERSISTENCE ---
