@@ -2054,7 +2054,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
   setProducts(updated); 
   toast.success('Updated'); 
   setEditId(null); 
-}} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-1"><Check className="w-4 h-4" /> Save</button></div></div>); } return (<div key={(p && p.id)} className={`bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-4 flex ${p.expiryDate ? 'ring-1 ring-amber-100' : ''}`}><div className="w-2/5 flex flex-col justify-between pr-4 border-r border-dashed border-slate-200"><div>{role === 'owner' ? (<input id="field-41" name="field-41" type="checkbox" checked={selectedIds.has((p && p.id))} onChange={() => handleSelect((p && p.id))} className="w-5 h-5 text-emerald-600 bg-white border-slate-300 rounded-md focus:ring-emerald-500" />) : <div className="h-5"/>}</div><div className="flex-1 flex items-center"><div className="text-xl md:text-2xl font-extrabold text-emerald-600 leading-tight">Ksh. {safePrice.toLocaleString()}{p.isCommodity ? <span className="text-sm font-semibold">/{p.unit}</span> : ''}</div></div><div className="flex items-center gap-2"><span className={`px-3 py-1 rounded-full text-xs font-bold ${safeStock <= 5 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{safeStock} {p.isCommodity ? p.unit : 'left'}</span>{(role === 'owner' || perms.addStock) && <button onClick={() => { const q = prompt('Add Stock:'); if (q) addStock(p, parseFloat(q)) }} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg" title="Add Stock"><Plus className="w-4 h-4 text-slate-700" /></button>}</div></div><div className="w-3/5 pl-4 flex flex-col">{settings.trackExpiry !== false && p.expiryDate && (<div className="self-start mb-2"><span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-bold border border-amber-100"><Calendar className="w-3 h-3" /> Exp: {p.expiryDate}</span></div>)}<div className="text-base md:text-lg font-bold text-slate-900 leading-tight">{p.name}</div>{canViewCosts && <div className="text-sm text-slate-500 mt-1">Ksh. {safeCost.toLocaleString()}{p.isCommodity ? `/${p.unit}` : ''}</div>}{(p && p.category) && <div className="text-sm text-slate-500 mt-1">{(p && p.category)}</div>}{p.barcode && <div className="text-[10px] text-slate-400 font-mono mt-1 truncate">{p.barcode}</div>}<div className="border-t border-slate-100 mt-auto pt-3 flex gap-1.5 flex-wrap"><button onClick={() => addToCart(p)} className="p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg" title="Add to Cart"><ShoppingCart className="w-4 h-4 text-emerald-600" /></button>{(role === 'owner' || perms.addStock) && <button onClick={() => { const q = prompt('Add Stock:'); if (q) addStock(p, parseFloat(q)) }} className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg" title="Add Stock"><PackagePlus className="w-4 h-4 text-blue-600" /></button>}{settings.showScan && (role === 'owner' || perms.editProducts) && <button onClick={() => { setUpdateId((p && p.id)); setScannerMode('update'); }} className="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg" title="Update Barcode"><QrCode className="w-4 h-4 text-indigo-600" /></button>}{(role === 'owner' || perms.editProducts) && <button onClick={() => { setEditId((p && p.id)); setEditData({ ...p }) }} className="p-2 bg-amber-50 hover:bg-amber-100 rounded-lg" title="Edit"><Edit2 className="w-4 h-4 text-amber-600" /></button>}{(role === 'owner' || perms.editProducts) && <button onClick={() => { if (confirm('Delete?')) setProducts(products.filter(x => x.id !== (p && p.id))) }} className="p-2 bg-red-50 hover:bg-red-100 rounded-lg" title="Delete"><Trash2 className="w-4 h-4 text-red-500" /></button>}</div></div></div>); })}</ErrorBoundary>{filtered.length === 0 && <div className="md:col-span-2 p-8 text-center text-slate-400 bg-white rounded-xl border border-slate-200">No products found.</div>}</div><Pagination totalItems={filtered.length} itemsPerPage={50} currentPage={currentPage} setCurrentPage={setCurrentPage} /></div></>) : <div className="bg-white rounded-2xl p-6 border border-slate-200">Orders content placeholder</div>}
+}} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-1"><Check className="w-4 h-4" /> Save</button></div></div>); } return (<div key={(p && p.id)} className={`bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-4 flex ${p.expiryDate ? 'ring-1 ring-amber-100' : ''}`}><div className="w-2/5 flex flex-col justify-between pr-4 border-r border-dashed border-slate-200"><div>{role === 'owner' ? (<input id="field-41" name="field-41" type="checkbox" checked={selectedIds.has((p && p.id))} onChange={() => handleSelect((p && p.id))} className="w-5 h-5 text-emerald-600 bg-white border-slate-300 rounded-md focus:ring-emerald-500" />) : <div className="h-5"/>}</div><div className="flex-1 flex items-center"><div className="text-xl md:text-2xl font-extrabold text-emerald-600 leading-tight">Ksh. {safePrice.toLocaleString()}{p.isCommodity ? <span className="text-sm font-semibold">/{p.unit}</span> : ''}</div></div><div className="flex items-center gap-2"><span className={`px-3 py-1 rounded-full text-xs font-bold ${safeStock <= 5 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{safeStock} {p.isCommodity ? p.unit : 'left'}</span>{(role === 'owner' || perms.addStock) && <button onClick={() => { const q = prompt('Add Stock:'); if (q) addStock(p, parseFloat(q)) }} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg" title="Add Stock"><Plus className="w-4 h-4 text-slate-700" /></button>}</div></div><div className="w-3/5 pl-4 flex flex-col">{settings.trackExpiry !== false && p.expiryDate && (<div className="self-start mb-2"><span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-bold border border-amber-100"><Calendar className="w-3 h-3" /> Exp: {p.expiryDate}</span></div>)}<div className="text-base md:text-lg font-bold text-slate-900 leading-tight">{p.name}</div>{canViewCosts && <div className="text-sm text-slate-500 mt-1">Ksh. {safeCost.toLocaleString()}{p.isCommodity ? `/${p.unit}` : ''}</div>}{(p && p.category) && <div className="text-sm text-slate-500 mt-1">{(p && p.category)}</div>}{p.barcode && <div className="mt-2"><MiniBarcodeImage value={p.barcode} /></div>}<div className="border-t border-slate-100 mt-auto pt-3 flex gap-1.5 flex-wrap"><button onClick={() => addToCart(p)} className="p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg" title="Add to Cart"><ShoppingCart className="w-4 h-4 text-emerald-600" /></button>{(role === 'owner' || perms.addStock) && <button onClick={() => { const q = prompt('Add Stock:'); if (q) addStock(p, parseFloat(q)) }} className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg" title="Add Stock"><PackagePlus className="w-4 h-4 text-blue-600" /></button>}{settings.showScan && (role === 'owner' || perms.editProducts) && <button onClick={() => { setUpdateId((p && p.id)); setScannerMode('update'); }} className="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg" title="Update Barcode"><QrCode className="w-4 h-4 text-indigo-600" /></button>}{(role === 'owner' || perms.editProducts) && <button onClick={() => { setEditId((p && p.id)); setEditData({ ...p }) }} className="p-2 bg-amber-50 hover:bg-amber-100 rounded-lg" title="Edit"><Edit2 className="w-4 h-4 text-amber-600" /></button>}{(role === 'owner' || perms.editProducts) && <button onClick={() => { if (confirm('Delete?')) setProducts(products.filter(x => x.id !== (p && p.id))) }} className="p-2 bg-red-50 hover:bg-red-100 rounded-lg" title="Delete"><Trash2 className="w-4 h-4 text-red-500" /></button>}</div></div></div>); })}</ErrorBoundary>{filtered.length === 0 && <div className="md:col-span-2 p-8 text-center text-slate-400 bg-white rounded-xl border border-slate-200">No products found.</div>}</div><Pagination totalItems={filtered.length} itemsPerPage={50} currentPage={currentPage} setCurrentPage={setCurrentPage} /></div></>) : <div className="bg-white rounded-2xl p-6 border border-slate-200">Orders content placeholder</div>}
           </div>
           <div className="lg:col-span-1 sticky top-8 order-1 lg:order-2"><CartPanel cart={cart} onUpdate={updateCartItem} onRemove={removeCartItem} onClear={clearCart} onCheckout={() => setIsCheckingOut(true)} currentUser={currentUser} /></div>
         </div>
@@ -4986,12 +4986,10 @@ id,name,qty,barcode,date,cashierName
 export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Default values
   const [defaultCopies, setDefaultCopies] = useState(1);
   const [defaultWidth, setDefaultWidth] = useState(20);
   const [defaultHeight, setDefaultHeight] = useState(10);
   
-  // By default, select all products that don't have a barcode
   const [selectedProductIds, setSelectedProductIds] = useState(() => {
     const ids = new Set();
     products.forEach(p => {
@@ -5000,7 +4998,6 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     return ids;
   });
   
-  // printSelections: qr.id (using p.barcode) -> { numCopies, width, height, productId }
   const [printSelections, setPrintSelections] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -5051,6 +5048,117 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     toast.success('Bulk generated Barcodes');
   };
 
+  const generatePDF = async (selectedBarcodesArray, currentProducts) => {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const margin = 5;
+      const spacingX = 1;
+      const spacingY = 2;
+      const pageWidth = 210;
+      const pageHeight = 297;
+      
+      let x = margin;
+      let y = margin;
+      let maxRowHeight = 0;
+
+      for (const [barcode, settings] of selectedBarcodesArray) {
+        const prod = currentProducts.find(p => p.id === settings.productId);
+        if (!prod) continue;
+
+        const numCopies = parseInt(settings.numCopies) || 1;
+        const widthMm = settings.width || 20;
+        const heightMm = settings.height || 10;
+        const textHeightMm = 3; 
+        const totalItemHeightMm = heightMm + textHeightMm;
+
+        for (let i = 0; i < numCopies; i++) {
+          if (x + widthMm > pageWidth - margin) {
+            x = margin;
+            y += maxRowHeight + spacingY;
+            maxRowHeight = 0;
+          }
+          
+          if (y + totalItemHeightMm > pageHeight - margin) {
+            doc.addPage();
+            x = margin;
+            y = margin;
+            maxRowHeight = 0;
+          }
+
+          const canvas = document.createElement('canvas');
+          JsBarcode(canvas, barcode, {
+            format: "CODE128",
+            displayValue: false,
+            margin: 0
+          });
+          const barcodeDataUrl = canvas.toDataURL('image/png');
+
+          doc.setDrawColor(150, 150, 150);
+          doc.setLineWidth(0.2);
+          doc.setLineDashPattern([1, 1], 0);
+          doc.rect(x, y, widthMm, totalItemHeightMm);
+          doc.setLineDashPattern([], 0);
+
+          doc.addImage(barcodeDataUrl, 'PNG', x, y, widthMm, heightMm);
+          
+          doc.setFontSize(6);
+          doc.setTextColor(0, 0, 0);
+          
+          // Split text to strictly fit within the width
+          let textLines = doc.splitTextToSize(prod.name, widthMm - 1);
+          let displayName = textLines[0];
+          if (textLines.length > 1) {
+            // Trim 2 chars to fit '..'
+            displayName = displayName.substring(0, displayName.length - 2) + '..';
+          }
+          
+          const textWidth = doc.getTextWidth(displayName);
+          const textX = x + (widthMm / 2) - (textWidth / 2);
+          const textY = y + heightMm + 2;
+          doc.text(displayName, textX, textY);
+
+          x += widthMm + spacingX;
+          if (totalItemHeightMm > maxRowHeight) {
+            maxRowHeight = totalItemHeightMm;
+          }
+        }
+      }
+      doc.save('Barcodes.pdf');
+  };
+
+  const handleGenerateAndPrint = async () => {
+    if (selectedProductIds.size === 0) return;
+    setIsGenerating(true);
+    try {
+      let tempProducts = [...products];
+      const newlyGeneratedBarcodes = [];
+      
+      tempProducts = tempProducts.map(p => {
+        if (selectedProductIds.has(p.id)) {
+          const newBarcode = p.barcode || generateUniqueBarcode(tempProducts);
+          newlyGeneratedBarcodes.push([newBarcode, { numCopies: defaultCopies, width: defaultWidth, height: defaultHeight, productId: p.id }]);
+          return { ...p, barcode: newBarcode };
+        }
+        return p;
+      });
+      
+      if (setProducts) await setProducts(tempProducts);
+      
+      // Update print selections UI as well
+      const newSelections = { ...printSelections };
+      newlyGeneratedBarcodes.forEach(([b, s]) => newSelections[b] = s);
+      setPrintSelections(newSelections);
+      setSelectedProductIds(new Set());
+      
+      await generatePDF(newlyGeneratedBarcodes, tempProducts);
+      toast.success('Generated and Printed Barcodes successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate and print barcodes.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleGenerateNewBarcode = async (productId) => {
     let tempProducts = [...products];
     let newBarcode = null;
@@ -5094,83 +5202,7 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
     }
     setIsGenerating(true);
     try {
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const margin = 5;
-      const spacingX = 1; // reduced spacing
-      const spacingY = 2; // reduced spacing
-      const pageWidth = 210;
-      const pageHeight = 297;
-      
-      let x = margin;
-      let y = margin;
-      
-      let maxRowHeight = 0;
-
-      for (const [barcode, settings] of selectedBarcodes) {
-        const prod = products.find(p => p.id === settings.productId);
-        if (!prod) continue;
-
-        const numCopies = parseInt(settings.numCopies) || 1;
-        const widthMm = settings.width || 20;
-        const heightMm = settings.height || 10;
-        
-        const textHeightMm = 3; 
-        const totalItemHeightMm = heightMm + textHeightMm;
-
-        for (let i = 0; i < numCopies; i++) {
-          if (x + widthMm > pageWidth - margin) {
-            x = margin;
-            y += maxRowHeight + spacingY;
-            maxRowHeight = 0;
-          }
-          
-          if (y + totalItemHeightMm > pageHeight - margin) {
-            doc.addPage();
-            x = margin;
-            y = margin;
-            maxRowHeight = 0;
-          }
-
-          const canvas = document.createElement('canvas');
-          JsBarcode(canvas, barcode, {
-            format: "CODE128",
-            displayValue: false,
-            margin: 0
-          });
-          const barcodeDataUrl = canvas.toDataURL('image/png');
-
-          doc.setDrawColor(150, 150, 150);
-          doc.setLineWidth(0.2);
-          doc.setLineDashPattern([1, 1], 0);
-          doc.rect(x, y, widthMm, totalItemHeightMm);
-          doc.setLineDashPattern([], 0);
-
-          doc.addImage(barcodeDataUrl, 'PNG', x, y, widthMm, heightMm);
-          
-          doc.setFontSize(6);
-          doc.setTextColor(0, 0, 0);
-          
-          let displayName = prod.name;
-          while (doc.getTextWidth(displayName + '...') > widthMm - 1 && displayName.length > 0) {
-            displayName = displayName.slice(0, -1);
-          }
-          if (displayName.length < prod.name.length) {
-            displayName += '...';
-          }
-          
-          const textWidth = doc.getTextWidth(displayName);
-          const textX = x + (widthMm / 2) - (textWidth / 2);
-          const textY = y + heightMm + 2;
-          doc.text(displayName, textX, textY);
-
-          x += widthMm + spacingX;
-          if (totalItemHeightMm > maxRowHeight) {
-            maxRowHeight = totalItemHeightMm;
-          }
-        }
-      }
-
-      doc.save('Barcodes.pdf');
+      await generatePDF(selectedBarcodes, products);
       toast.success("Barcodes PDF generated successfully!");
       onClose();
     } catch (err) {
@@ -5200,11 +5232,27 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
               <input type="text" placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none w-full text-sm" />
             </div>
             
+            <div className="flex items-center gap-2">
+              <button onClick={() => {
+                const ids = new Set();
+                products.forEach(p => { if (!p.barcode) ids.add(p.id); });
+                setSelectedProductIds(ids);
+              }} className="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium">
+                Select All Missing Barcodes
+              </button>
+            </div>
+            
             <div className="flex items-center gap-4 flex-wrap">
               {selectedProductIds.size > 0 && (
-                <button onClick={handleBulkGenerate} className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
-                  Bulk Generate for {selectedProductIds.size} Products
-                </button>
+                <>
+                  <button onClick={handleBulkGenerate} className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
+                    Generate for {selectedProductIds.size} Products
+                  </button>
+                  <button onClick={handleGenerateAndPrint} disabled={isGenerating} className="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm flex items-center gap-2 disabled:opacity-50">
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+                    Generate & Print {selectedProductIds.size} Products
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -5300,7 +5348,25 @@ export const BarcodeGeneratorModal = ({ products, setProducts, onClose }) => {
 
 
 
-    const App = () => {
+
+    const MiniBarcodeImage = ({ value }) => {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    if (canvasRef.current && value) {
+      JsBarcode(canvasRef.current, value, {
+        format: "CODE128",
+        displayValue: true,
+        height: 30,
+        width: 1,
+        fontSize: 12,
+        margin: 0
+      });
+    }
+  }, [value]);
+  return <canvas ref={canvasRef} style={{ height: '40px', width: 'auto' }} />;
+};
+
+const App = () => {
       // --- SESSION PERSISTENCE ---
       // Restore view and currentUser from localStorage so page refresh never drops the user
       const [view, setViewRaw] = useState(() => {
