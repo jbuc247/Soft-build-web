@@ -99,10 +99,11 @@ export default async function handler(req, res) {
     await client.batch(stmts, 'write');
 
     // ✅ Update last_modified timestamp so polling devices detect the change instantly
+    const now = Date.now();
     await client.execute(`CREATE TABLE IF NOT EXISTS meta (id INTEGER PRIMARY KEY, last_modified INTEGER NOT NULL DEFAULT 0)`);
-    await client.execute(`INSERT OR REPLACE INTO meta (id, last_modified) VALUES (1, ${Date.now()})`);
+    await client.execute(`INSERT OR REPLACE INTO meta (id, last_modified) VALUES (1, ${now})`);
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, last_modified: now });
   } catch (err) {
     return res.status(200).json({ ok: false, error: err?.message || 'Sync failed.' });
   } finally {

@@ -244,6 +244,9 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
           if (resJson.ok) {
             // Stamp local write time so the polling loop doesn't re-download our own change
             sessionStorage.setItem('sb_last_local_write', String(Date.now()));
+            if (resJson.last_modified) {
+              localStorage.setItem('sb_last_sync_ts', String(resJson.last_modified));
+            }
             return true;
           }
         }
@@ -2595,6 +2598,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
           toast.error("No products to generate PDF.");
           return;
         }
+()
         const today = new Date().toLocaleDateString('en-GB');
         doc.setFontSize(16);
         doc.text(settings.name || 'Products Sheet', 14, 15);
@@ -4629,14 +4633,8 @@ id,name,qty,barcode,date,cashierName
             const lastLocalSync = Number(localStorage.getItem('sb_last_sync_ts') || 0);
             
             if (last_modified > lastLocalSync) {
-              // Grace period: if this device pushed data within the last 10 seconds, it's our own write
-              const lastLocalWrite = Number(sessionStorage.getItem('sb_last_local_write') || 0);
-              const msSinceLocalWrite = Date.now() - lastLocalWrite;
-              
               // Update our local sync baseline so we don't pull this same timestamp again
               localStorage.setItem('sb_last_sync_ts', String(last_modified));
-
-              if (msSinceLocalWrite < 10000) return; // Our own write — skip pull
 
               // Pull fresh data and apply directly to React state
               const pullRes = await fetch('/api/pull', {
